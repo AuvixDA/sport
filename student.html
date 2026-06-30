@@ -6,41 +6,117 @@
 <title>ПУЛЬС — расписание</title>
 <style>
   :root {
-    --bg: #1c1a17;
-    --card: #242220;
-    --row: #2b2823;
-    --accent: #f2b705;
-    --text: #f2f0ea;
-    --muted: #9a948c;
+    --bg: #1c1a17; --card: #242220; --row: #2b2823;
+    --accent: #f2b705; --text: #f2f0ea; --muted: #9a948c;
+    --danger: #e0554f; --green: #4caf50;
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    background: var(--bg);
+    margin: 0; background: var(--bg);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    color: var(--text);
-    min-height: 100vh;
+    color: var(--text); min-height: 100vh;
   }
   .wrap { max-width: 560px; margin: 0 auto; padding: 16px; }
   .card { background: var(--card); border-radius: 16px; padding: 20px; }
+
+  /* ---- AUTH ---- */
+  #authScreen {
+    min-height: 100vh; display: flex;
+    align-items: center; justify-content: center;
+  }
+  .auth-card {
+    background: var(--card); border-radius: 16px;
+    padding: 32px; width: 320px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  }
+  .auth-card h1 {
+    color: var(--accent); text-align: center;
+    margin: 0 0 6px; letter-spacing: 2px; font-size: 22px;
+  }
+  .auth-subtitle {
+    text-align: center; color: var(--muted);
+    font-size: 13px; margin-bottom: 24px;
+  }
+  .auth-tabs {
+    display: flex; gap: 0; margin-bottom: 20px;
+    border-radius: 8px; overflow: hidden;
+    border: 1px solid #3a3631;
+  }
+  .auth-tab {
+    flex: 1; padding: 9px; text-align: center;
+    background: none; border: none; color: var(--muted);
+    font-size: 14px; cursor: pointer;
+  }
+  .auth-tab.active { background: var(--accent); color: #1c1a17; font-weight: 600; }
+  .auth-label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 6px; }
+  .auth-input {
+    width: 100%; padding: 10px 12px; margin-bottom: 4px;
+    border-radius: 8px; border: 1px solid #3a3631;
+    background: #1c1a17; color: var(--text); font-size: 15px;
+  }
+  .auth-input:focus { outline: 1px solid var(--accent); }
+  .auth-hint { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+  .auth-btn {
+    width: 100%; padding: 12px; border: none; border-radius: 8px;
+    background: var(--accent); color: #1c1a17;
+    font-weight: 600; font-size: 15px; cursor: pointer; margin-top: 8px;
+  }
+  .auth-error {
+    color: var(--danger); font-size: 13px;
+    text-align: center; margin-top: 10px; min-height: 18px;
+  }
+
+  /* ---- APP ---- */
+  #appScreen { display: none; }
   .top {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 16px;
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 16px;
   }
   .logo { color: var(--accent); font-weight: 700; letter-spacing: 2px; font-size: 20px; margin: 0; }
+  .user-badge {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--muted);
+  }
+  .user-nick {
+    background: var(--row); border-radius: 8px;
+    padding: 5px 10px; color: var(--text); font-size: 13px;
+  }
+  .logout-btn {
+    background: none; border: 1px solid #3a3631; color: var(--muted);
+    border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer;
+  }
   .status { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
-  .dot { width: 7px; height: 7px; border-radius: 50%; background: #4caf50; }
-  .days { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+  .dot.offline { background: var(--danger); }
+
+  /* Навигация по неделям */
+  .week-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .week-arrow {
+    background: var(--row); border: none; color: var(--text);
+    border-radius: 8px; width: 34px; height: 34px;
+    font-size: 18px; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .week-label { flex: 1; text-align: center; font-size: 13px; color: var(--muted); }
+
+  .days { display: flex; gap: 6px; margin-bottom: 16px; }
   .day-btn {
-    flex: 1; padding: 8px 4px; text-align: center; border-radius: 8px;
-    background: var(--row); color: var(--muted); font-size: 13px; cursor: pointer;
-    border: none; white-space: nowrap;
+    flex: 1; padding: 8px 2px; text-align: center; border-radius: 8px;
+    background: var(--row); color: var(--muted); font-size: 12px;
+    cursor: pointer; border: none; line-height: 1.3;
   }
   .day-btn.active { background: var(--accent); color: #1c1a17; font-weight: 600; }
-  .date-title { font-size: 17px; font-weight: 600; margin-bottom: 16px; text-transform: capitalize; }
+  .day-btn.today { outline: 1px solid var(--accent); }
+  .day-num { font-size: 14px; font-weight: 600; display: block; }
+
+  .date-title { font-size: 17px; font-weight: 600; margin-bottom: 16px; }
+
+  /* Слоты */
   .slot {
-    display: flex; align-items: center; gap: 14px; background: var(--row);
-    border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 14px;
+    background: var(--row); border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 8px;
+    position: relative;
   }
   .slot-time { font-weight: 700; width: 50px; flex-shrink: 0; }
   .slot-info { flex: 1; min-width: 0; }
@@ -48,128 +124,416 @@
   .participants { display: flex; gap: 6px; flex-wrap: wrap; }
   .pill {
     background: var(--accent); color: #1c1a17; font-size: 11px; font-weight: 700;
-    border-radius: 50%; width: 26px; height: 26px; display: flex;
-    align-items: center; justify-content: center;
+    border-radius: 50%; width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
   }
   .slot-count { font-size: 12px; color: var(--muted); flex-shrink: 0; }
-  .slot-count.full { color: var(--accent); }
+  .slot-count.full { color: var(--accent); font-weight: 600; }
+
+  /* Красный кружок "новое" */
+  .new-badge {
+    position: absolute; top: -4px; right: -4px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--danger);
+    border: 2px solid var(--card);
+  }
+
+  /* Легенда */
+  .legend {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--muted); margin-bottom: 14px;
+  }
+  .legend-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--danger); flex-shrink: 0;
+  }
+
   .empty { color: var(--muted); font-size: 13px; padding: 12px 0; }
+
+  /* Ошибка */
+  .error-banner {
+    display: none; background: #3a1a1a; border: 1px solid var(--danger);
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 12px;
+    font-size: 13px; color: #f08080;
+  }
+  .error-banner.show { display: block; }
+
+  /* Спиннер */
+  .spinner {
+    display: flex; align-items: center; gap: 10px;
+    color: var(--muted); font-size: 13px; padding: 16px 0;
+  }
+  .spin {
+    width: 18px; height: 18px; border: 2px solid #3a3631;
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #datePicker { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
+  .date-jump {
+    background: var(--row); border: 1px solid #3a3631; color: var(--text);
+    border-radius: 8px; padding: 6px 8px; font-size: 13px; cursor: pointer;
+  }
 </style>
 </head>
 <body>
+
+<!-- ===== AUTH ===== -->
+<div id="authScreen">
+  <div class="auth-card">
+    <h1>ПУЛЬС</h1>
+    <div class="auth-subtitle">расписание тренировок</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Войти</button>
+      <button class="auth-tab" id="tabReg" onclick="switchTab('reg')">Регистрация</button>
+    </div>
+
+    <label class="auth-label">Ник (латинские буквы)</label>
+    <input class="auth-input" type="text" id="authNick" placeholder="например: maxim23" autocomplete="username">
+    <div class="auth-hint">только a–z, 0–9, без пробелов</div>
+
+    <label class="auth-label">Пароль</label>
+    <input class="auth-input" type="password" id="authPass" autocomplete="current-password">
+
+    <button class="auth-btn" id="authBtn" onclick="doAuth()">Войти</button>
+    <div class="auth-error" id="authError"></div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<input type="date" id="datePicker">
+<div id="appScreen">
 <div class="wrap">
   <div class="card">
     <div class="top">
       <h1 class="logo">ПУЛЬС</h1>
-      <div class="status"><span class="dot"></span> обновляется в реальном времени</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="status">
+          <span class="dot" id="connDot"></span>
+          <span id="connLabel">в сети</span>
+        </div>
+        <span class="user-nick" id="userNickLabel"></span>
+        <button class="logout-btn" onclick="doLogout()">Выйти</button>
+      </div>
+    </div>
+
+    <div class="error-banner" id="errorBanner"></div>
+
+    <div class="week-nav">
+      <button class="week-arrow" id="prevWeek">‹</button>
+      <div class="week-label" id="weekLabel"></div>
+      <button class="date-jump" id="jumpBtn">📅</button>
+      <button class="week-arrow" id="nextWeek">›</button>
     </div>
 
     <div class="days" id="daysRow"></div>
     <div class="date-title" id="dateTitle"></div>
+
+    <div class="legend">
+      <span class="legend-dot"></span>
+      <span>— изменено с вашего последнего визита</span>
+    </div>
+
     <div id="slotsList"></div>
   </div>
+</div>
 </div>
 
 <script type="module">
 import { db, ref, onValue } from "./firebase-config.js";
+import { get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
+// ============================================================
+// УТИЛИТЫ ДАТ
+// ============================================================
 const DAY_NAMES = ["ВС","ПН","ВТ","СР","ЧТ","ПТ","СБ"];
-const MONTHS = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
-const WEEKDAY_FULL = ["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"];
+const DAY_FULL  = ["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"];
+const MONTHS    = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
 
-function formatDateKey(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+function fmtKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate()+n); return r; }
+function getMonday(d) {
+  const r = new Date(d);
+  const day = r.getDay();
+  r.setDate(r.getDate() + (day === 0 ? -6 : 1 - day));
+  return r;
 }
 
-function getWeekDates() {
-  const today = new Date();
-  const dates = [];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    dates.push(d);
+// ============================================================
+// СОСТОЯНИЕ
+// ============================================================
+let weekMonday   = getMonday(new Date());
+let selectedDate = new Date();
+let lastVisit    = parseInt(localStorage.getItem("pulse_lastVisit") || "0");
+let currentNick  = null;
+
+// ============================================================
+// AUTH
+// ============================================================
+window.switchTab = function(tab) {
+  document.getElementById("tabLogin").className = "auth-tab" + (tab==="login" ? " active" : "");
+  document.getElementById("tabReg").className   = "auth-tab" + (tab==="reg"   ? " active" : "");
+  document.getElementById("authBtn").textContent = tab === "login" ? "Войти" : "Зарегистрироваться";
+  document.getElementById("authError").textContent = "";
+  document.getElementById("authBtn").dataset.tab = tab;
+};
+document.getElementById("authBtn").dataset.tab = "login";
+
+window.doAuth = async function() {
+  const nick = document.getElementById("authNick").value.trim().toLowerCase();
+  const pass = document.getElementById("authPass").value;
+  const tab  = document.getElementById("authBtn").dataset.tab;
+  const errEl = document.getElementById("authError");
+  errEl.textContent = "";
+
+  if (!/^[a-z0-9]{2,20}$/.test(nick)) {
+    errEl.textContent = "Ник: только a–z и 0–9, от 2 до 20 символов"; return;
   }
-  return dates;
+  if (pass.length < 4) {
+    errEl.textContent = "Пароль: минимум 4 символа"; return;
+  }
+
+  document.getElementById("authBtn").textContent = "...";
+
+  try {
+    const snap = await get(ref(db, `users/${nick}`));
+
+    if (tab === "login") {
+      if (!snap.exists()) { errEl.textContent = "Пользователь не найден"; }
+      else if (snap.val().password !== pass) { errEl.textContent = "Неверный пароль"; }
+      else { saveAndEnter(nick, pass); return; }
+    } else {
+      if (snap.exists()) { errEl.textContent = "Этот ник уже занят"; }
+      else {
+        await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js")
+          .then(({ set: fbSet }) => fbSet(ref(db, `users/${nick}`), { password: pass, createdAt: Date.now() }));
+        saveAndEnter(nick, pass); return;
+      }
+    }
+  } catch(e) {
+    errEl.textContent = "Ошибка соединения. Проверьте интернет.";
+    console.error(e);
+  }
+
+  document.getElementById("authBtn").textContent = tab === "login" ? "Войти" : "Зарегистрироваться";
+};
+
+// Enter по паролю
+document.getElementById("authPass").addEventListener("keydown", e => {
+  if (e.key === "Enter") window.doAuth();
+});
+
+function saveAndEnter(nick, pass) {
+  localStorage.setItem("pulse_user", JSON.stringify({ nick, pass }));
+  currentNick = nick;
+  showApp();
 }
 
-const weekDates = getWeekDates();
-let selectedDate = weekDates[0];
+window.doLogout = function() {
+  localStorage.removeItem("pulse_user");
+  currentNick = null;
+  document.getElementById("appScreen").style.display = "none";
+  document.getElementById("authScreen").style.display = "flex";
+};
 
-const daysRow = document.getElementById("daysRow");
+// Авто-вход если есть сохранённые данные
+async function tryAutoLogin() {
+  const saved = localStorage.getItem("pulse_user");
+  if (!saved) return false;
+  const { nick, pass } = JSON.parse(saved);
+  try {
+    const snap = await get(ref(db, `users/${nick}`));
+    if (snap.exists() && snap.val().password === pass) {
+      currentNick = nick;
+      return true;
+    }
+  } catch(e) { /* нет сети — всё равно пустим, проверим потом */ }
+  return false;
+}
+
+// ============================================================
+// APP
+// ============================================================
+function showApp() {
+  document.getElementById("authScreen").style.display = "none";
+  document.getElementById("appScreen").style.display  = "block";
+  document.getElementById("userNickLabel").textContent = currentNick;
+  startConnectionMonitor();
+  renderDays();
+  subscribeToDay();
+
+  // Обновляем lastVisit через 4 сек (чтобы пользователь успел увидеть красные точки)
+  setTimeout(() => {
+    lastVisit = Date.now();
+    localStorage.setItem("pulse_lastVisit", String(lastVisit));
+  }, 4000);
+}
+
+// ============================================================
+// МОНИТОР СОЕДИНЕНИЯ
+// ============================================================
+function startConnectionMonitor() {
+  const connRef = ref(db, ".info/connected");
+  onValue(connRef, snap => {
+    const online = snap.val() === true;
+    document.getElementById("connDot").className   = "dot" + (online ? "" : " offline");
+    document.getElementById("connLabel").textContent = online ? "в сети" : "нет соединения";
+  });
+}
+
+// ============================================================
+// НАВИГАЦИЯ ПО НЕДЕЛЯМ
+// ============================================================
+document.getElementById("prevWeek").addEventListener("click", () => {
+  weekMonday = addDays(weekMonday, -7);
+  selectedDate = new Date(weekMonday);
+  renderDays(); subscribeToDay();
+});
+document.getElementById("nextWeek").addEventListener("click", () => {
+  weekMonday = addDays(weekMonday, 7);
+  selectedDate = new Date(weekMonday);
+  renderDays(); subscribeToDay();
+});
+
+const datePicker = document.getElementById("datePicker");
+document.getElementById("jumpBtn").addEventListener("click", () => {
+  datePicker.value = fmtKey(selectedDate);
+  datePicker.showPicker?.() || datePicker.click();
+});
+datePicker.addEventListener("change", () => {
+  if (!datePicker.value) return;
+  const [y,m,d] = datePicker.value.split("-");
+  const jumped = new Date(+y, +m-1, +d);
+  weekMonday = getMonday(jumped);
+  selectedDate = jumped;
+  renderDays(); subscribeToDay();
+});
+
+// ============================================================
+// РЕНДЕР ДНЕЙ
+// ============================================================
+const daysRow   = document.getElementById("daysRow");
+const weekLabel = document.getElementById("weekLabel");
 function renderDays() {
+  const week = Array.from({length:7}, (_,i) => addDays(weekMonday, i));
+  const todayKey = fmtKey(new Date());
+  const sun = addDays(weekMonday, 6);
+  weekLabel.textContent = `${weekMonday.getDate()} ${MONTHS[weekMonday.getMonth()]} — ${sun.getDate()} ${MONTHS[sun.getMonth()]}`;
   daysRow.innerHTML = "";
-  weekDates.forEach((d) => {
+  week.forEach(d => {
     const btn = document.createElement("button");
-    btn.className = "day-btn" + (formatDateKey(d) === formatDateKey(selectedDate) ? " active" : "");
-    btn.textContent = DAY_NAMES[d.getDay()];
-    btn.addEventListener("click", () => {
-      selectedDate = d;
-      renderDays();
-      subscribeToDay();
-    });
+    let cls = "day-btn";
+    if (fmtKey(d) === fmtKey(selectedDate)) cls += " active";
+    if (fmtKey(d) === todayKey) cls += " today";
+    btn.className = cls;
+    btn.innerHTML = `${DAY_NAMES[d.getDay()]}<span class="day-num">${d.getDate()}</span>`;
+    btn.addEventListener("click", () => { selectedDate = d; renderDays(); subscribeToDay(); });
     daysRow.appendChild(btn);
   });
 }
 
 function renderDateTitle() {
-  const title = document.getElementById("dateTitle");
-  title.textContent = `${WEEKDAY_FULL[selectedDate.getDay()]}, ${selectedDate.getDate()} ${MONTHS[selectedDate.getMonth()]}`;
+  document.getElementById("dateTitle").textContent =
+    `${DAY_FULL[selectedDate.getDay()]}, ${selectedDate.getDate()} ${MONTHS[selectedDate.getMonth()]} ${selectedDate.getFullYear()}`;
 }
 
-function initials(name) {
-  return name.trim().split(/\s+/).map(p => p[0]).slice(0, 2).join("").toUpperCase();
-}
+// ============================================================
+// FIREBASE — подписка на день
+// ============================================================
+const slotsList   = document.getElementById("slotsList");
+const errorBanner = document.getElementById("errorBanner");
 
-const slotsList = document.getElementById("slotsList");
+function showError(msg) {
+  errorBanner.textContent = msg;
+  errorBanner.classList.add("show");
+}
+function hideError() { errorBanner.classList.remove("show"); }
+
 function subscribeToDay() {
   renderDateTitle();
-  const dateKey = formatDateKey(selectedDate);
-  const dayRef = ref(db, `schedule/${dateKey}`);
-  onValue(dayRef, (snapshot) => {
+  const dayRef = ref(db, `schedule/${fmtKey(selectedDate)}`);
+
+  // Показываем спиннер пока грузим
+  slotsList.innerHTML = `<div class="spinner"><div class="spin"></div> Загружаем расписание…</div>`;
+
+  // Кэш из localStorage пока Firebase не ответил
+  const cacheKey = `pulse_cache_${fmtKey(selectedDate)}`;
+  const cached   = localStorage.getItem(cacheKey);
+  if (cached) {
+    try { renderSlots(JSON.parse(cached)); } catch(e) {}
+  }
+
+  onValue(dayRef, snapshot => {
+    hideError();
     const data = snapshot.val() || {};
+    // Сохраняем в кэш
+    localStorage.setItem(cacheKey, JSON.stringify(data));
     renderSlots(data);
+  }, err => {
+    // Ошибка Firebase — показываем баннер
+    showError("Не удалось загрузить расписание. Проверьте соединение с интернетом.");
+    console.error("Firebase error:", err);
   });
+}
+
+// ============================================================
+// РЕНДЕР СЛОТОВ
+// ============================================================
+function initials(name) {
+  return name.trim().split(/\s+/).map(p => p[0]).slice(0,2).join("").toUpperCase();
 }
 
 function renderSlots(data) {
   slotsList.innerHTML = "";
-  const entries = Object.entries(data).sort((a, b) => a[1].time.localeCompare(b[1].time));
+  const entries = Object.entries(data).sort((a,b) => a[1].time.localeCompare(b[1].time));
 
-  if (entries.length === 0) {
-    const empty = document.createElement("div");
-    empty.className = "empty";
-    empty.textContent = "Пока нет тренировок в этот день";
-    slotsList.appendChild(empty);
+  if (!entries.length) {
+    const el = document.createElement("div");
+    el.className = "empty";
+    el.textContent = "Тренировок в этот день нет";
+    slotsList.appendChild(el);
     return;
   }
 
   entries.forEach(([id, slot]) => {
     const div = document.createElement("div");
     div.className = "slot";
-    const participants = slot.participants ? Object.values(slot.participants) : [];
-    const limit = slot.type === "personal" ? 1 : (slot.limit || 6);
-    const isFull = participants.length >= limit;
+    const parts  = slot.participants ? Object.values(slot.participants) : [];
+    const limit  = slot.type === "personal" ? 1 : (slot.limit || 6);
+    const isFull = parts.length >= limit;
+
+    // Красный кружок если слот обновлён после последнего визита
+    const isNew = slot.updatedAt && slot.updatedAt > lastVisit;
 
     div.innerHTML = `
+      ${isNew ? '<div class="new-badge"></div>' : ""}
       <div class="slot-time">${slot.time}</div>
       <div class="slot-info">
         <div class="slot-type">${slot.type === "personal" ? "персонально" : "групповая"}</div>
         <div class="participants">
-          ${participants.slice(0, 4).map(n => `<div class="pill">${initials(n)}</div>`).join("")}
-          ${participants.length > 4 ? `<div class="pill">+${participants.length - 4}</div>` : ""}
+          ${parts.slice(0,4).map(n => `<div class="pill">${initials(n)}</div>`).join("")}
+          ${parts.length > 4 ? `<div class="pill">+${parts.length-4}</div>` : ""}
         </div>
       </div>
-      <div class="slot-count ${isFull ? "full" : ""}">${participants.length}/${limit}${isFull ? " заполнено" : ""}</div>
-    `;
+      <div class="slot-count ${isFull?"full":""}">${parts.length}/${limit}${isFull?" заполнено":""}</div>`;
     slotsList.appendChild(div);
   });
 }
 
-renderDays();
-subscribeToDay();
+// ============================================================
+// СТАРТ
+// ============================================================
+(async () => {
+  const ok = await tryAutoLogin();
+  if (ok) {
+    showApp();
+  } else {
+    document.getElementById("authScreen").style.display = "flex";
+  }
+})();
 </script>
 </body>
 </html>
