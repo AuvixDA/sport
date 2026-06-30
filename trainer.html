@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПУЛЬС — тренер</title>
+<style>
+  :root {
+    --bg: #1c1a17;
+    --card: #242220;
+    --row: #2b2823;
+    --accent: #f2b705;
+    --text: #f2f0ea;
+    --muted: #9a948c;
+    --danger: #e0554f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .wrap {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .logo {
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 2px;
+    font-size: 20px;
+    margin: 0;
+  }
+  .status {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #4caf50;
+  }
+  .logout {
+    background: none;
+    border: 1px solid #3a3631;
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .days {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+  }
+  .day-btn {
+    flex: 1;
+    padding: 8px 4px;
+    text-align: center;
+    border-radius: 8px;
+    background: var(--row);
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    border: none;
+    white-space: nowrap;
+  }
+  .day-btn.active {
+    background: var(--accent);
+    color: #1c1a17;
+    font-weight: 600;
+  }
+  .date-title {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .date-sub {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .slot {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--row);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .slot.free {
+    background: transparent;
+    border: 1px dashed #3a3631;
+  }
+  .slot-time {
+    font-weight: 700;
+    width: 50px;
+    flex-shrink: 0;
+  }
+  .slot.free .slot-time { color: var(--muted); }
+  .slot-info { flex: 1; min-width: 0; }
+  .slot-type {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .participants {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .pill {
+    background: var(--accent);
+    color: #1c1a17;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .slot-count {
+    font-size: 12px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .slot-count.full { color: var(--accent); }
+  .add-btn {
+    margin-top: 12px;
+    width: 100%;
+    padding: 12px;
+    border: 1px dashed #3a3631;
+    background: none;
+    color: var(--muted);
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  /* Модалка */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 10;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--card);
+    border-radius: 16px 16px 0 0;
+    padding: 20px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  .modal h2 {
+    margin: 0 0 16px;
+    font-size: 17px;
+  }
+  .modal label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin: 12px 0 6px;
+  }
+  .modal input, .modal select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #3a3631;
+    background: #1c1a17;
+    color: var(--text);
+    font-size: 14px;
+  }
+  .row2 { display: flex; gap: 10px; }
+  .row2 > div { flex: 1; }
+  .name-list {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .name-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--row);
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .name-item button {
+    background: none;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .add-name-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .add-name-row input { flex: 1; }
+  .add-name-row button {
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    padding: 0 14px;
+    color: #1c1a17;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .btn-primary, .btn-danger, .btn-ghost {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--accent); color: #1c1a17; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-ghost { background: var(--row); color: var(--text); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="top">
+      <h1 class="logo">ПУЛЬС</h1>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="status"><span class="dot"></span> в сети</div>
+        <button class="logout" id="logoutBtn">Выйти</button>
+      </div>
+    </div>
+
+    <div class="days" id="daysRow"></div>
+
+    <div class="date-title" id="dateTitle"></div>
+    <div class="date-sub" id="dateSub"></div>
+
+    <div id="slotsList"></div>
+
+    <button class="add-btn" id="addSlotBtn">+ Добавить тренировку</button>
+  </div>
+</div>
+
+<!-- Модалка добавления/редактирования слота -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle">Тренировка</h2>
+
+    <div class="row2">
+      <div>
+        <label>Время</label>
+        <input type="time" id="slotTime">
+      </div>
+      <div>
+        <label>Тип</label>
+        <select id="slotType">
+          <option value="personal">Персональная</option>
+          <option value="group">Групповая</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="limitBlock">
+      <label>Лимит мест (для групповой)</label>
+      <input type="number" id="slotLimit" min="1" value="6">
+    </div>
+
+    <label>Участники</label>
+    <div class="name-list" id="nameList"></div>
+    <div class="add-name-row">
+      <input type="text" id="newName" placeholder="Имя участника">
+      <button id="addNameBtn">+</button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" id="cancelBtn">Отмена</button>
+      <button class="btn-danger" id="deleteBtn">Удалить</button>
+      <button class="btn-primary" id="saveBtn">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { db, ref, set, push, remove, onValue } from "./firebase-config.js";
+
+// --- Проверка доступа ---
+if (sessionStorage.getItem("pulse_trainer_auth") !== "1") {
+  window.location.href = "index.html";
+}
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  sessionStorage.removeItem("pulse_trainer_auth");
+  window.location.href = "index.html";
+});
+
+// --- Утилиты дат ---
+const DAY_NAMES = ["ВС","ПН","ВТ","СР","ЧТ","ПТ","СБ"];
+const MONTHS = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+
+function formatDateKey(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function getWeekDates() {
+  // неделя начиная с сегодняшнего дня, 7 дней вперёд
+  const today = new Date();
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    dates.push(d);
+  }
+  return dates;
+}
+
+const weekDates = getWeekDates();
+let selectedDate = weekDates[0];
+let currentSlots = {}; // данные текущего выбранного дня из Firebase
+let editingSlotId = null;
+
+// --- Рендер вкладок дней ---
+const daysRow = document.getElementById("daysRow");
+function renderDays() {
+  daysRow.innerHTML = "";
+  weekDates.forEach((d) => {
+    const btn = document.createElement("button");
+    btn.className = "day-btn" + (formatDateKey(d) === formatDateKey(selectedDate) ? " active" : "");
+    btn.textContent = DAY_NAMES[d.getDay()] + (d.getDate() === new Date().getDate() ? "" : "");
+    btn.addEventListener("click", () => {
+      selectedDate = d;
+      renderDays();
+      subscribeToDay();
+    });
+    daysRow.appendChild(btn);
+  });
+}
+
+function renderDateTitle() {
+  const title = document.getElementById("dateTitle");
+  const sub = document.getElementById("dateSub");
+  title.textContent = `${DAY_NAMES[selectedDate.getDay()].toLowerCase() === "вс" ? "воскресенье" : ""}`;
+  const weekdayFull = ["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"][selectedDate.getDay()];
+  title.textContent = `${weekdayFull}, ${selectedDate.getDate()} ${MONTHS[selectedDate.getMonth()]}`;
+  sub.textContent = "";
+}
+
+// --- Подписка на данные дня из Firebase ---
+let currentUnsub = null;
+function subscribeToDay() {
+  renderDateTitle();
+  const dateKey = formatDateKey(selectedDate);
+  const dayRef = ref(db, `schedule/${dateKey}`);
+  onValue(dayRef, (snapshot) => {
+    currentSlots = snapshot.val() || {};
+    renderSlots();
+  });
+}
+
+// --- Рендер списка тренировок ---
+const slotsList = document.getElementById("slotsList");
+function renderSlots() {
+  slotsList.innerHTML = "";
+  const entries = Object.entries(currentSlots).sort((a, b) => a[1].time.localeCompare(b[1].time));
+
+  if (entries.length === 0) {
+    const empty = document.createElement("div");
+    empty.style.cssText = "color:var(--muted); font-size:13px; padding:12px 0;";
+    empty.textContent = "Пока нет тренировок в этот день";
+    slotsList.appendChild(empty);
+    return;
+  }
+
+  entries.forEach(([id, slot]) => {
+    const div = document.createElement("div");
+    div.className = "slot";
+    const participants = slot.participants ? Object.values(slot.participants) : [];
+    const limit = slot.type === "personal" ? 1 : (slot.limit || 6);
+    const isFull = participants.length >= limit;
+
+    div.innerHTML = `
+      <div class="slot-time">${slot.time}</div>
+      <div class="slot-info">
+        <div class="slot-type">${slot.type === "personal" ? "персонально" : "групповая"}</div>
+        <div class="participants">
+          ${participants.slice(0, 4).map(n => `<div class="pill">${initials(n)}</div>`).join("")}
+          ${participants.length > 4 ? `<div class="pill">+${participants.length - 4}</div>` : ""}
+        </div>
+      </div>
+      <div class="slot-count ${isFull ? "full" : ""}">${participants.length}/${limit}${isFull ? " заполнено" : ""}</div>
+    `;
+    div.addEventListener("click", () => openModal(id, slot));
+    slotsList.appendChild(div);
+  });
+}
+
+function initials(name) {
+  return name.trim().split(/\s+/).map(p => p[0]).slice(0, 2).join("").toUpperCase();
+}
+
+// --- Модалка ---
+const overlay = document.getElementById("overlay");
+const modalTitle = document.getElementById("modalTitle");
+const slotTime = document.getElementById("slotTime");
+const slotType = document.getElementById("slotType");
+const slotLimit = document.getElementById("slotLimit");
+const limitBlock = document.getElementById("limitBlock");
+const nameList = document.getElementById("nameList");
+const newName = document.getElementById("newName");
+const deleteBtn = document.getElementById("deleteBtn");
+
+let tempParticipants = [];
+
+function openModal(id, slot) {
+  editingSlotId = id || null;
+  modalTitle.textContent = id ? "Редактировать тренировку" : "Новая тренировка";
+  slotTime.value = slot ? slot.time : "";
+  slotType.value = slot ? slot.type : "group";
+  slotLimit.value = slot && slot.limit ? slot.limit : 6;
+  tempParticipants = slot && slot.participants ? Object.values(slot.participants) : [];
+  deleteBtn.style.display = id ? "block" : "none";
+  toggleLimitBlock();
+  renderNameList();
+  overlay.classList.add("open");
+}
+
+function closeModal() {
+  overlay.classList.remove("open");
+  editingSlotId = null;
+}
+
+function toggleLimitBlock() {
+  limitBlock.style.display = slotType.value === "group" ? "block" : "none";
+}
+slotType.addEventListener("change", toggleLimitBlock);
+
+function renderNameList() {
+  nameList.innerHTML = "";
+  tempParticipants.forEach((name, idx) => {
+    const div = document.createElement("div");
+    div.className = "name-item";
+    div.innerHTML = `<span>${name}</span><button data-idx="${idx}">убрать</button>`;
+    div.querySelector("button").addEventListener("click", () => {
+      tempParticipants.splice(idx, 1);
+      renderNameList();
+    });
+    nameList.appendChild(div);
+  });
+}
+
+document.getElementById("addNameBtn").addEventListener("click", () => {
+  const name = newName.value.trim();
+  if (!name) return;
+  tempParticipants.push(name);
+  newName.value = "";
+  renderNameList();
+});
+newName.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    document.getElementById("addNameBtn").click();
+  }
+});
+
+document.getElementById("cancelBtn").addEventListener("click", closeModal);
+document.getElementById("addSlotBtn").addEventListener("click", () => openModal(null, null));
+
+document.getElementById("saveBtn").addEventListener("click", () => {
+  const time = slotTime.value;
+  if (!time) { alert("Укажите время"); return; }
+
+  const dateKey = formatDateKey(selectedDate);
+  const type = slotType.value;
+  const data = {
+    time,
+    type,
+    participants: tempParticipants
+  };
+  if (type === "group") {
+    data.limit = Number(slotLimit.value) || 6;
+  }
+
+  if (editingSlotId) {
+    set(ref(db, `schedule/${dateKey}/${editingSlotId}`), data);
+  } else {
+    push(ref(db, `schedule/${dateKey}`), data);
+  }
+  closeModal();
+});
+
+deleteBtn.addEventListener("click", () => {
+  if (!editingSlotId) return;
+  if (!confirm("Удалить эту тренировку?")) return;
+  const dateKey = formatDateKey(selectedDate);
+  remove(ref(db, `schedule/${dateKey}/${editingSlotId}`));
+  closeModal();
+});
+
+// --- Старт ---
+renderDays();
+subscribeToDay();
+</script>
+</body>
+</html>
