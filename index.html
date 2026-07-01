@@ -87,8 +87,8 @@
   <div class="card">
     <h1>ПУЛЬС</h1>
     <form id="loginForm">
-      <label for="login">Логин</label>
-      <input type="text" id="login" autocomplete="username" required>
+      <label for="login">Email</label>
+      <input type="email" id="login" autocomplete="username" placeholder="trainer@pulse.net" required>
       <label for="password">Пароль</label>
       <input type="password" id="password" autocomplete="current-password" required>
       <button type="submit">Войти</button>
@@ -97,25 +97,38 @@
     <a class="link" href="student.html">Открыть расписание (для учеников) →</a>
   </div>
 
-<script>
-  // Логин и пароль захардкожены здесь.
-  // Чтобы сменить — просто поменяй значения ниже.
-  const TRAINER_LOGIN = "trainer";
-  const TRAINER_PASSWORD = "pulse2024";
+<script type="module">
+  import { auth, signInWithEmailAndPassword, signOut, TRAINER_UID } from "./firebase-config.js";
 
   const form = document.getElementById("loginForm");
   const errorMsg = document.getElementById("errorMsg");
+  const submitBtn = form.querySelector("button[type=submit]");
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    errorMsg.textContent = "";
     const login = document.getElementById("login").value.trim();
     const password = document.getElementById("password").value;
+    submitBtn.disabled = true;
 
-    if (login === TRAINER_LOGIN && password === TRAINER_PASSWORD) {
-      sessionStorage.setItem("pulse_trainer_auth", "1");
-      window.location.href = "trainer.html";
-    } else {
-      errorMsg.textContent = "Неверный логин или пароль";
+    try {
+      const cred = await signInWithEmailAndPassword(auth, login, password);
+      if (cred.user.uid !== TRAINER_UID) {
+        // Вошли в валидный Auth-аккаунт, но это не тренер — выходим обратно
+        await signOut(auth);
+        errorMsg.textContent = "Этот вход доступен только тренеру";
+      } else {
+        window.location.href = "trainer.html";
+      }
+    } catch (err) {
+      if (err.code === "auth/invalid-credential" || err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
+        errorMsg.textContent = "Неверный логин или пароль";
+      } else {
+        errorMsg.textContent = "Ошибка входа. Проверьте интернет.";
+        console.error(err);
+      }
+    } finally {
+      submitBtn.disabled = false;
     }
   });
 </script>
