@@ -395,10 +395,15 @@ function normalizeParticipants(raw) {
 function genId() {
   return "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
-function messengerLabel(p) {
-  if (!p.messenger) return null;
-  const type = p.messengerType === "telegram" ? "Telegram" : (p.messengerType === "max" ? "MAX" : "");
-  return `${type ? type + ": " : ""}${p.messenger}`;
+function contactLines(p) {
+  const lines = [];
+  if (p.telegram) lines.push(`Telegram: ${p.telegram}`);
+  if (p.max) lines.push(`MAX: ${p.max}`);
+  if (p.whatsapp) {
+    const waHref = `https://wa.me/${p.whatsapp.replace(/[^\d]/g, "")}`;
+    lines.push(`WhatsApp: <a href="${waHref}" target="_blank" rel="noopener">${p.whatsapp}</a>`);
+  }
+  return lines;
 }
 
 // --- Состояние ---
@@ -587,7 +592,7 @@ function renderParticipantList() {
     card.className = "participant-card";
 
     if (p.source === "student") {
-      const contact = [p.phone, messengerLabel(p)].filter(Boolean).join(" · ");
+      const contact = [p.phone, ...contactLines(p)].filter(Boolean).join(" · ");
       card.innerHTML = `
         <div class="participant-top">
           <div class="participant-name">${p.name} <span class="badge-self">записался сам</span></div>
@@ -738,15 +743,17 @@ async function handleMoveParticipant(card, p) {
     await set(ref(db, `schedule/${oldDate}/${editingSlotId}/updatedAt`), Date.now());
 
     const newId = genId();
-    await set(ref(db, `schedule/${dateStr}/${targetSlotId}/participants/${newId}`), {
+    const movedData = {
       name: p.name,
       nick: p.nick || null,
       phone: p.phone || null,
-      messenger: p.messenger || null,
-      messengerType: p.messengerType || null,
       source: "student",
       createdAt: Date.now()
-    });
+    };
+    if (p.telegram) movedData.telegram = p.telegram;
+    if (p.max) movedData.max = p.max;
+    if (p.whatsapp) movedData.whatsapp = p.whatsapp;
+    await set(ref(db, `schedule/${dateStr}/${targetSlotId}/participants/${newId}`), movedData);
     await set(ref(db, `schedule/${dateStr}/${targetSlotId}/updatedAt`), Date.now());
 
     if (p.nick) {
@@ -947,10 +954,8 @@ function subscribeToClients() {
 
 clientsSearch.addEventListener("input", renderClients);
 
-function messengerLabelClient(u) {
-  if (!u.messenger) return null;
-  const type = u.messengerType === "telegram" ? "Telegram" : (u.messengerType === "max" ? "MAX" : "");
-  return `${type ? type + ": " : ""}${u.messenger}`;
+function messengerLinesClient(u) {
+  return contactLines(u).join(" · ");
 }
 
 function renderClients() {
@@ -970,7 +975,7 @@ function renderClients() {
   filtered.forEach(u => {
     const card = document.createElement("div");
     card.className = "client-card";
-    const msg = messengerLabelClient(u);
+    const msg = messengerLinesClient(u);
     card.innerHTML = `
       <div class="client-top">
         <div>
