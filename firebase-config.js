@@ -60,6 +60,19 @@ function nickToEmail(nick) {
 // в канал и в Telegram-уведомлениях (?date=ГГГГ-ММ-ДД).
 const SITE_BASE_URL = "https://auvixda.github.io/sport/";
 
+// Логотип/баннер, который бот прикладывает к каждому сообщению.
+// Файл нужно положить в репозиторий по этому пути.
+const LOGO_IMAGE_URL = `${SITE_BASE_URL}logo.png`;
+
+// Экранирование пользовательских данных перед вставкой в HTML-подпись Telegram —
+// без этого имя/телефон с символами <, >, & сломают разметку и сообщение не отправится.
+function escapeHtml(str) {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 // ============================================================
 // TELEGRAM — отправка сообщений напрямую из браузера.
 // Токен бота и настройки берутся из settings/telegram в базе (не хардкодятся).
@@ -68,24 +81,41 @@ const SITE_BASE_URL = "https://auvixda.github.io/sport/";
 async function fetchTelegramSettings() {
   try {
     const snap = await get(ref(db, "settings/telegram"));
-    return snap.val() || null;
+    return { data: snap.val() || null, error: null };
   } catch (e) {
     console.error("Ошибка загрузки настроек Telegram:", e);
-    return null;
+    if (e.code === "PERMISSION_DENIED" || /permission/i.test(e.message || "")) {
+      return { data: null, error: "Нет доступа на чтение settings/telegram у этого аккаунта (проверьте Security Rules в Firebase)" };
+    }
+    return { data: null, error: "Не удалось загрузить настройки Telegram из базы" };
   }
 }
 
-// Возвращает { ok: true } либо { ok: false, error: "человекочитаемая причина" }
-async function sendTelegramMessage(botToken, chatId, text) {
+function buildInlineButton(buttonText, buttonUrl) {
+  if (!buttonText || !buttonUrl) return undefined;
+  return { inline_keyboard: [[{ text: buttonText, url: buttonUrl }]] };
+}
+
+// Отправка обычного текстового сообщения (используется как фолбэк, если фото не ушло)
+async function sendTelegramMessage(botToken, chatId, caption, buttonText, buttonUrl) {
   try {
+    const body = {
+      chat_id: chatId,
+      text: caption,
+      parse_mode: "HTML",
+      disable_web_page_preview: true
+    };
+    const markup = buildInlineButton(buttonText, buttonUrl);
+    if (markup) body.reply_markup = markup;
+
     const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: false })
+      body: JSON.stringify(body)
     });
     const data = await res.json();
     if (!data.ok) {
-      console.error("Telegram API вернул ошибку:", data);
+      console.error("Telegram API (sendMessage) вернул ошибку:", data);
       return { ok: false, error: data.description || `Telegram API ошибка (код ${data.error_code || "?"})` };
     }
     return { ok: true };
@@ -95,24 +125,57 @@ async function sendTelegramMessage(botToken, chatId, text) {
   }
 }
 
+// Отправка фото с подписью и кнопкой. При неудаче (например, картинка недоступна)
+// автоматически откатывается на обычное текстовое сообщение, чтобы уведомление не терялось.
+async function sendTelegramPhoto(botToken, chatId, caption, buttonText, buttonUrl) {
+  try {
+    const body = {
+      chat_id: chatId,
+      photo: LOGO_IMAGE_URL,
+      caption,
+      parse_mode: "HTML"
+    };
+    const markup = buildInlineButton(buttonText, buttonUrl);
+    if (markup) body.reply_markup = markup;
+
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (data.ok) return { ok: true };
+
+    console.warn("Telegram API (sendPhoto) не удалось, пробуем текстом:", data);
+    return sendTelegramMessage(botToken, chatId, caption, buttonText, buttonUrl);
+  } catch (e) {
+    console.error("Ошибка запроса к Telegram API (sendPhoto):", e);
+    return sendTelegramMessage(botToken, chatId, caption, buttonText, buttonUrl);
+  }
+}
+
 // Публикация поста в канал (используется при создании групповой тренировки)
-async function postTelegramChannelMessage(text) {
-  const settings = await fetchTelegramSettings();
+// opts: { caption, buttonText, buttonUrl }
+async function postTelegramChannelMessage(opts) {
+  const { data: settings, error } = await fetchTelegramSettings();
+  if (error) return { ok: false, error };
   if (!settings || !settings.botToken || !settings.channelUsername) {
     console.warn("Telegram: бот или канал ещё не настроены в settings/telegram");
     return { ok: false, error: "Бот или канал не настроены в панели администратора" };
   }
-  return sendTelegramMessage(settings.botToken, `@${settings.channelUsername}`, text);
+  return sendTelegramPhoto(settings.botToken, `@${settings.channelUsername}`, opts.caption, opts.buttonText, opts.buttonUrl);
 }
 
 // Личное сообщение тренеру (используется при новой заявке на тренировку)
-async function notifyTrainerTelegram(text) {
-  const settings = await fetchTelegramSettings();
+// opts: { caption, buttonText, buttonUrl }
+async function notifyTrainerTelegram(opts) {
+  const { data: settings, error } = await fetchTelegramSettings();
+  if (error) return { ok: false, error };
   if (!settings || !settings.botToken || !settings.trainerChatId) {
     console.warn("Telegram: бот или ID тренера ещё не настроены в settings/telegram");
     return { ok: false, error: "Бот или ID тренера не настроены в панели администратора" };
   }
-  return sendTelegramMessage(settings.botToken, settings.trainerChatId, text);
+  return sendTelegramPhoto(settings.botToken, settings.trainerChatId, opts.caption, opts.buttonText, opts.buttonUrl);
 }
 
 export {
@@ -120,5 +183,6 @@ export {
   auth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
   onAuthStateChanged, signOut,
   TRAINER_UID, ADMIN_UID, nickToEmail,
-  SITE_BASE_URL, postTelegramChannelMessage, notifyTrainerTelegram
+  SITE_BASE_URL, LOGO_IMAGE_URL, escapeHtml,
+  postTelegramChannelMessage, notifyTrainerTelegram
 };
