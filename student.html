@@ -23,10 +23,11 @@
   #authScreen {
     min-height: 100vh; display: flex;
     align-items: center; justify-content: center;
+    padding: 24px 16px;
   }
   .auth-card {
     background: var(--card); border-radius: 16px;
-    padding: 32px; width: 320px;
+    padding: 32px; width: 340px; max-width: 100%;
     box-shadow: 0 10px 30px rgba(0,0,0,0.4);
   }
   .auth-card h1 {
@@ -49,13 +50,18 @@
   }
   .auth-tab.active { background: var(--accent); color: #1c1a17; font-weight: 600; }
   .auth-label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 6px; }
-  .auth-input {
+  .auth-input, .auth-select {
     width: 100%; padding: 10px 12px; margin-bottom: 4px;
     border-radius: 8px; border: 1px solid #3a3631;
     background: #1c1a17; color: var(--text); font-size: 15px;
+    font-family: inherit;
   }
-  .auth-input:focus { outline: 1px solid var(--accent); }
+  .auth-input:focus, .auth-select:focus { outline: 1px solid var(--accent); }
   .auth-hint { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
+  .auth-row2 { display: flex; gap: 8px; }
+  .auth-row2 > div { flex: 1; }
+  .reg-only { display: none; }
+  .reg-only.show { display: block; }
   .auth-btn {
     width: 100%; padding: 12px; border: none; border-radius: 8px;
     background: var(--accent); color: #1c1a17;
@@ -89,6 +95,32 @@
   .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
   .dot.offline { background: var(--danger); }
 
+  /* Уведомления */
+  .notif-list { margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .notif-card {
+    background: #3a2a14; border: 1px solid rgba(242,183,5,0.35);
+    border-radius: 10px; padding: 12px 14px; font-size: 13px;
+  }
+  .notif-card.cancelled { background: #3a1a1a; border-color: rgba(224,85,79,0.4); }
+  .notif-title { font-weight: 700; margin-bottom: 4px; }
+  .notif-body { color: var(--text); opacity: 0.9; line-height: 1.4; }
+  .notif-reason { color: var(--muted); margin-top: 4px; font-style: italic; }
+  .notif-dismiss {
+    margin-top: 8px; background: none; border: 1px solid #3a3631; color: var(--muted);
+    border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer;
+  }
+
+  /* Профиль (для старых аккаунтов без контактов) */
+  .profile-banner {
+    display: none; background: #3a2a14; border: 1px solid rgba(242,183,5,0.35);
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px;
+  }
+  .profile-banner.show { display: block; }
+  .profile-banner button {
+    margin-top: 8px; background: var(--accent); border: none; color: #1c1a17;
+    border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+
   /* Навигация по неделям */
   .week-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
   .week-arrow {
@@ -113,11 +145,11 @@
 
   /* Слоты */
   .slot {
-    display: flex; align-items: center; gap: 14px;
     background: var(--row); border-radius: 10px;
     padding: 12px 14px; margin-bottom: 8px;
     position: relative;
   }
+  .slot-main { display: flex; align-items: center; gap: 14px; }
   .slot-time { font-weight: 700; width: 50px; flex-shrink: 0; }
   .slot-info { flex: 1; min-width: 0; }
   .slot-type { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
@@ -127,8 +159,24 @@
     border-radius: 50%; width: 26px; height: 26px;
     display: flex; align-items: center; justify-content: center;
   }
-  .slot-count { font-size: 12px; color: var(--muted); flex-shrink: 0; }
+  .slot-count { font-size: 12px; color: var(--muted); flex-shrink: 0; text-align: right; }
   .slot-count.full { color: var(--accent); font-weight: 600; }
+
+  .slot-action { margin-top: 10px; }
+  .book-btn {
+    width: 100%; padding: 9px; border-radius: 8px; border: none;
+    background: var(--accent); color: #1c1a17; font-weight: 600; font-size: 13px; cursor: pointer;
+  }
+  .book-btn:disabled { background: #3a3631; color: var(--muted); cursor: not-allowed; }
+  .booked-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; font-size: 13px;
+  }
+  .booked-label { color: var(--green); font-weight: 600; }
+  .unbook-btn {
+    background: none; border: 1px solid #3a3631; color: var(--danger);
+    border-radius: 6px; padding: 6px 10px; font-size: 12px; cursor: pointer;
+  }
 
   /* Красный кружок "новое" */
   .new-badge {
@@ -175,6 +223,38 @@
     background: var(--row); border: 1px solid #3a3631; color: var(--text);
     border-radius: 8px; padding: 6px 8px; font-size: 13px; cursor: pointer;
   }
+
+  /* Тост */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: #333; color: var(--text); padding: 10px 18px;
+    border-radius: 10px; font-size: 14px; opacity: 0;
+    transition: opacity 0.3s; pointer-events: none; z-index: 100;
+    white-space: nowrap;
+  }
+  .toast.warn { background: #7a3a1a; }
+  .toast.show { opacity: 1; }
+
+  /* Модалка профиля */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    align-items: flex-end; justify-content: center; z-index: 10;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border-radius: 16px 16px 0 0;
+    padding: 20px; width: 100%; max-width: 560px;
+  }
+  .modal h2 { margin: 0 0 6px; font-size: 17px; }
+  .modal .sub { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .btn-primary, .btn-ghost {
+    flex: 1; padding: 12px; border-radius: 10px; border: none;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .btn-primary { background: var(--accent); color: #1c1a17; }
+  .btn-ghost { background: var(--row); color: var(--text); }
 </style>
 </head>
 <body>
@@ -195,6 +275,29 @@
 
     <label class="auth-label">Пароль</label>
     <input class="auth-input" type="password" id="authPass" autocomplete="current-password">
+
+    <!-- Поля только для регистрации -->
+    <div class="reg-only" id="regOnlyBlock">
+      <label class="auth-label">Имя и фамилия</label>
+      <input class="auth-input" type="text" id="authName" placeholder="Иван Иванов">
+
+      <label class="auth-label">Контактный телефон</label>
+      <input class="auth-input" type="tel" id="authPhone" placeholder="+7 900 000-00-00">
+
+      <label class="auth-label">Мессенджер для связи</label>
+      <div class="auth-row2">
+        <div>
+          <select class="auth-select" id="authMsgType">
+            <option value="telegram">Telegram</option>
+            <option value="max">MAX</option>
+          </select>
+        </div>
+        <div>
+          <input class="auth-input" type="text" id="authMsgHandle" placeholder="@username">
+        </div>
+      </div>
+      <div class="auth-hint">нужно, чтобы тренер мог связаться по поводу записи</div>
+    </div>
 
     <button class="auth-btn" id="authBtn" onclick="doAuth()">Войти</button>
     <div class="auth-error" id="authError"></div>
@@ -220,6 +323,13 @@
 
     <div class="error-banner" id="errorBanner"></div>
 
+    <div class="profile-banner" id="profileBanner">
+      Чтобы записываться на тренировки, дополните профиль контактами.
+      <div><button id="completeProfileBtn">Заполнить профиль</button></div>
+    </div>
+
+    <div class="notif-list" id="notifList"></div>
+
     <div class="week-nav">
       <button class="week-arrow" id="prevWeek">‹</button>
       <div class="week-label" id="weekLabel"></div>
@@ -240,8 +350,46 @@
 </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
+<!-- Модалка заполнения профиля -->
+<div class="overlay" id="profileOverlay">
+  <div class="modal">
+    <h2>Контактные данные</h2>
+    <div class="sub">Нужны, чтобы тренер мог связаться с вами по поводу записи</div>
+
+    <label class="auth-label">Имя и фамилия</label>
+    <input class="auth-input" type="text" id="profName" placeholder="Иван Иванов">
+
+    <label class="auth-label">Контактный телефон</label>
+    <input class="auth-input" type="tel" id="profPhone" placeholder="+7 900 000-00-00">
+
+    <label class="auth-label">Мессенджер для связи</label>
+    <div class="auth-row2">
+      <div>
+        <select class="auth-select" id="profMsgType">
+          <option value="telegram">Telegram</option>
+          <option value="max">MAX</option>
+        </select>
+      </div>
+      <div>
+        <input class="auth-input" type="text" id="profMsgHandle" placeholder="@username">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" id="profileCancelBtn">Отмена</button>
+      <button class="btn-primary" id="profileSaveBtn">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
-import { db, ref, onValue } from "./firebase-config.js";
+import {
+  db, ref, onValue, push, set, remove, update,
+  auth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  onAuthStateChanged, signOut, nickToEmail
+} from "./firebase-config.js";
 import { get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 // ============================================================
@@ -263,12 +411,47 @@ function getMonday(d) {
 }
 
 // ============================================================
+// УЧАСТНИКИ: поддержка старого формата (массив строк) и нового (объекты)
+// ============================================================
+function normalizeParticipants(raw) {
+  if (!raw) return [];
+  const entries = Array.isArray(raw)
+    ? raw.map((v, i) => [String(i), v])
+    : Object.entries(raw);
+  return entries
+    .filter(([, v]) => v !== null && v !== undefined)
+    .map(([id, v]) => {
+      if (typeof v === "string") {
+        return { id: "legacy_" + id, name: v, source: "trainer", createdAt: 0 };
+      }
+      return { id, source: "trainer", createdAt: 0, ...v };
+    });
+}
+function genId() {
+  return "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+// ============================================================
 // СОСТОЯНИЕ
 // ============================================================
 let weekMonday   = getMonday(new Date());
 let selectedDate = new Date();
 let lastVisit    = parseInt(localStorage.getItem("pulse_lastVisit") || "0");
 let currentNick  = null;
+let currentUser  = null; // профиль из users/{nick}
+let currentDayData = {};
+
+// ============================================================
+// ТОСТ
+// ============================================================
+const toast = document.getElementById("toast");
+let toastTimer;
+function showToast(msg, type = "") {
+  toast.textContent = msg;
+  toast.className = "toast" + (type ? " " + type : "") + " show";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 3000);
+}
 
 // ============================================================
 // AUTH
@@ -279,6 +462,7 @@ window.switchTab = function(tab) {
   document.getElementById("authBtn").textContent = tab === "login" ? "Войти" : "Зарегистрироваться";
   document.getElementById("authError").textContent = "";
   document.getElementById("authBtn").dataset.tab = tab;
+  document.getElementById("regOnlyBlock").classList.toggle("show", tab === "reg");
 };
 document.getElementById("authBtn").dataset.tab = "login";
 
@@ -296,21 +480,59 @@ window.doAuth = async function() {
     errEl.textContent = "Пароль: минимум 4 символа"; return;
   }
 
+  let regData = null;
+  if (tab === "reg") {
+    const name = document.getElementById("authName").value.trim();
+    const phone = document.getElementById("authPhone").value.trim();
+    const msgType = document.getElementById("authMsgType").value;
+    const msgHandle = document.getElementById("authMsgHandle").value.trim();
+    if (!name) { errEl.textContent = "Укажите имя и фамилию"; return; }
+    if (phone.replace(/\D/g,"").length < 7) { errEl.textContent = "Укажите корректный телефон"; return; }
+    if (!msgHandle) { errEl.textContent = "Укажите контакт в мессенджере"; return; }
+    regData = { name, phone, messengerType: msgType, messenger: msgHandle };
+  }
+
   document.getElementById("authBtn").textContent = "...";
+  const email = nickToEmail(nick);
 
   try {
-    const snap = await get(ref(db, `users/${nick}`));
-
     if (tab === "login") {
-      if (!snap.exists()) { errEl.textContent = "Пользователь не найден"; }
-      else if (snap.val().password !== pass) { errEl.textContent = "Неверный пароль"; }
-      else { saveAndEnter(nick, pass); return; }
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, pass);
+        saveAndEnter(nick);
+        return;
+      } catch (authErr) {
+        if (authErr.code === "auth/user-not-found" || authErr.code === "auth/invalid-credential") {
+          // Возможно, это старый аккаунт (создан до перехода на Firebase Auth) — пробуем мигрировать
+          const migrated = await tryMigrateLegacyAccount(nick, pass, email);
+          if (migrated) { saveAndEnter(nick); return; }
+          errEl.textContent = "Пользователь не найден";
+        } else if (authErr.code === "auth/wrong-password") {
+          errEl.textContent = "Неверный пароль";
+        } else {
+          errEl.textContent = "Ошибка соединения. Проверьте интернет.";
+          console.error(authErr);
+        }
+      }
     } else {
-      if (snap.exists()) { errEl.textContent = "Этот ник уже занят"; }
-      else {
-        await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js")
-          .then(({ set: fbSet }) => fbSet(ref(db, `users/${nick}`), { password: pass, createdAt: Date.now() }));
-        saveAndEnter(nick, pass); return;
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        await set(ref(db, `users/${nick}`), {
+          authUid: cred.user.uid,
+          createdAt: Date.now(),
+          ...regData
+        });
+        saveAndEnter(nick);
+        return;
+      } catch (authErr) {
+        if (authErr.code === "auth/email-already-in-use") {
+          errEl.textContent = "Этот ник уже занят";
+        } else if (authErr.code === "auth/weak-password") {
+          errEl.textContent = "Пароль слишком простой, попробуйте длиннее";
+        } else {
+          errEl.textContent = "Ошибка соединения. Проверьте интернет.";
+          console.error(authErr);
+        }
       }
     }
   } catch(e) {
@@ -321,38 +543,109 @@ window.doAuth = async function() {
   document.getElementById("authBtn").textContent = tab === "login" ? "Войти" : "Зарегистрироваться";
 };
 
+// Аккаунты, созданные до перехода на Firebase Auth, хранили пароль прямо в базе.
+// При первом входе после обновления — тихо создаём для них настоящий Auth-аккаунт
+// и убираем пароль из базы, чтобы им не пришлось регистрироваться заново.
+async function tryMigrateLegacyAccount(nick, pass, email) {
+  try {
+    const snap = await get(ref(db, `users/${nick}`));
+    if (!snap.exists()) return null;
+    const data = snap.val();
+    if (data.authUid) return null; // уже мигрирован, но пароль почему-то не подошёл
+    if (data.password !== pass) return null; // старый пароль тоже не совпал
+
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await update(ref(db, `users/${nick}`), { authUid: cred.user.uid });
+    await remove(ref(db, `users/${nick}/password`));
+    return cred.user;
+  } catch (e) {
+    console.error("Ошибка миграции старого аккаунта:", e);
+    return null;
+  }
+}
+
 // Enter по паролю
 document.getElementById("authPass").addEventListener("keydown", e => {
   if (e.key === "Enter") window.doAuth();
 });
 
-function saveAndEnter(nick, pass) {
-  localStorage.setItem("pulse_user", JSON.stringify({ nick, pass }));
+function saveAndEnter(nick) {
   currentNick = nick;
   showApp();
 }
 
-window.doLogout = function() {
-  localStorage.removeItem("pulse_user");
+window.doLogout = async function() {
+  await signOut(auth);
   currentNick = null;
   document.getElementById("appScreen").style.display = "none";
   document.getElementById("authScreen").style.display = "flex";
 };
 
-// Авто-вход если есть сохранённые данные
-async function tryAutoLogin() {
-  const saved = localStorage.getItem("pulse_user");
-  if (!saved) return false;
-  const { nick, pass } = JSON.parse(saved);
-  try {
-    const snap = await get(ref(db, `users/${nick}`));
-    if (snap.exists() && snap.val().password === pass) {
-      currentNick = nick;
-      return true;
-    }
-  } catch(e) { /* нет сети — всё равно пустим, проверим потом */ }
-  return false;
+// Авто-вход: ждём, что скажет Firebase Auth о текущей сессии
+function tryAutoLogin() {
+  return new Promise(resolve => {
+    const unsub = onAuthStateChanged(auth, user => {
+      unsub();
+      if (user && user.email && user.email.endsWith("@pulse.local")) {
+        currentNick = user.email.split("@")[0];
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    });
+  });
 }
+
+// ============================================================
+// ПРОФИЛЬ (контакты)
+// ============================================================
+function profileComplete(u) {
+  return !!(u && u.name && u.phone && u.messenger);
+}
+async function loadProfile() {
+  try {
+    const snap = await get(ref(db, `users/${currentNick}`));
+    currentUser = snap.val() || null;
+  } catch(e) {
+    console.error("Ошибка загрузки профиля:", e);
+  }
+  document.getElementById("profileBanner").classList.toggle("show", !profileComplete(currentUser));
+}
+
+const profileOverlay = document.getElementById("profileOverlay");
+function openProfileModal() {
+  document.getElementById("profName").value = currentUser?.name || "";
+  document.getElementById("profPhone").value = currentUser?.phone || "";
+  document.getElementById("profMsgType").value = currentUser?.messengerType || "telegram";
+  document.getElementById("profMsgHandle").value = currentUser?.messenger || "";
+  profileOverlay.classList.add("open");
+}
+document.getElementById("completeProfileBtn").addEventListener("click", openProfileModal);
+document.getElementById("profileCancelBtn").addEventListener("click", () => profileOverlay.classList.remove("open"));
+document.getElementById("profileSaveBtn").addEventListener("click", async () => {
+  const name = document.getElementById("profName").value.trim();
+  const phone = document.getElementById("profPhone").value.trim();
+  const messengerType = document.getElementById("profMsgType").value;
+  const messenger = document.getElementById("profMsgHandle").value.trim();
+  if (!name || phone.replace(/\D/g,"").length < 7 || !messenger) {
+    showToast("Заполните все поля контактов", "warn");
+    return;
+  }
+  try {
+    await set(ref(db, `users/${currentNick}/name`), name);
+    await set(ref(db, `users/${currentNick}/phone`), phone);
+    await set(ref(db, `users/${currentNick}/messengerType`), messengerType);
+    await set(ref(db, `users/${currentNick}/messenger`), messenger);
+    currentUser = { ...currentUser, name, phone, messengerType, messenger };
+    document.getElementById("profileBanner").classList.remove("show");
+    profileOverlay.classList.remove("open");
+    showToast("Профиль сохранён");
+    renderSlots(currentDayData);
+  } catch(e) {
+    showToast("Ошибка сохранения. Проверьте соединение.", "warn");
+    console.error(e);
+  }
+});
 
 // ============================================================
 // APP
@@ -364,6 +657,8 @@ function showApp() {
   startConnectionMonitor();
   renderDays();
   subscribeToDay();
+  loadProfile();
+  subscribeToNotifications();
 
   // Обновляем lastVisit через 4 сек (чтобы пользователь успел увидеть красные точки)
   setTimeout(() => {
@@ -381,6 +676,45 @@ function startConnectionMonitor() {
     const online = snap.val() === true;
     document.getElementById("connDot").className   = "dot" + (online ? "" : " offline");
     document.getElementById("connLabel").textContent = online ? "в сети" : "нет соединения";
+  });
+}
+
+// ============================================================
+// УВЕДОМЛЕНИЯ (отмена / перенос тренером)
+// ============================================================
+const notifList = document.getElementById("notifList");
+function fmtPretty(dateKey, time) {
+  if (!dateKey) return time || "";
+  const [y,m,d] = dateKey.split("-");
+  const dt = new Date(+y, +m-1, +d);
+  return `${dt.getDate()} ${MONTHS[dt.getMonth()]}${time ? ", " + time : ""}`;
+}
+function subscribeToNotifications() {
+  const notifRef = ref(db, `notifications/${currentNick}`);
+  onValue(notifRef, snapshot => {
+    const data = snapshot.val() || {};
+    const entries = Object.entries(data)
+      .filter(([, n]) => !n.read)
+      .sort((a,b) => (b[1].createdAt||0) - (a[1].createdAt||0));
+
+    notifList.innerHTML = "";
+    entries.forEach(([id, n]) => {
+      const div = document.createElement("div");
+      div.className = "notif-card " + (n.type === "cancelled" ? "cancelled" : "");
+      const body = n.type === "cancelled"
+        ? `Тренировка ${fmtPretty(n.date, n.time)} отменена тренером.`
+        : `Тренировка ${fmtPretty(n.oldDate, n.oldTime)} перенесена на ${fmtPretty(n.newDate, n.newTime)}.`;
+      div.innerHTML = `
+        <div class="notif-title">${n.type === "cancelled" ? "❌ Запись отменена" : "🔁 Запись перенесена"}</div>
+        <div class="notif-body">${body}</div>
+        ${n.reason ? `<div class="notif-reason">Причина: ${n.reason}</div>` : ""}
+        <button class="notif-dismiss" data-id="${id}">Понятно</button>`;
+      div.querySelector(".notif-dismiss").addEventListener("click", async () => {
+        try { await set(ref(db, `notifications/${currentNick}/${id}/read`), true); }
+        catch(e) { console.error(e); }
+      });
+      notifList.appendChild(div);
+    });
   });
 }
 
@@ -487,6 +821,7 @@ function initials(name) {
 }
 
 function renderSlots(data) {
+  currentDayData = data;
   slotsList.innerHTML = "";
   const entries = Object.entries(data).sort((a,b) => a[1].time.localeCompare(b[1].time));
 
@@ -501,26 +836,121 @@ function renderSlots(data) {
   entries.forEach(([id, slot]) => {
     const div = document.createElement("div");
     div.className = "slot";
-    const parts  = slot.participants ? Object.values(slot.participants) : [];
+    const parts  = normalizeParticipants(slot.participants);
     const limit  = slot.type === "personal" ? 1 : (slot.limit || 6);
     const isFull = parts.length >= limit;
+    const myEntry = parts.find(p => p.nick === currentNick);
 
     // Красный кружок если слот обновлён после последнего визита
     const isNew = slot.updatedAt && slot.updatedAt > lastVisit;
 
     div.innerHTML = `
       ${isNew ? '<div class="new-badge"></div>' : ""}
-      <div class="slot-time">${slot.time}</div>
-      <div class="slot-info">
-        <div class="slot-type">${slot.type === "personal" ? "персонально" : "групповая"}</div>
-        <div class="participants">
-          ${parts.slice(0,4).map(n => `<div class="pill">${initials(n)}</div>`).join("")}
-          ${parts.length > 4 ? `<div class="pill">+${parts.length-4}</div>` : ""}
+      <div class="slot-main">
+        <div class="slot-time">${slot.time}</div>
+        <div class="slot-info">
+          <div class="slot-type">${slot.type === "personal" ? "персонально" : "групповая"}</div>
+          <div class="participants">
+            ${parts.slice(0,4).map(p => `<div class="pill">${initials(p.name)}</div>`).join("")}
+            ${parts.length > 4 ? `<div class="pill">+${parts.length-4}</div>` : ""}
+          </div>
         </div>
+        <div class="slot-count ${isFull?"full":""}">${parts.length}/${limit}${isFull?" заполнено":""}</div>
       </div>
-      <div class="slot-count ${isFull?"full":""}">${parts.length}/${limit}${isFull?" заполнено":""}</div>`;
+      <div class="slot-action" data-action-slot="${id}"></div>`;
+
+    const actionEl = div.querySelector("[data-action-slot]");
+    if (myEntry) {
+      actionEl.innerHTML = `
+        <div class="booked-row">
+          <span class="booked-label">✓ Вы записаны</span>
+          <button class="unbook-btn" data-pid="${myEntry.id}">Отменить запись</button>
+        </div>`;
+      actionEl.querySelector(".unbook-btn").addEventListener("click", () => unbook(id, myEntry.id, slot));
+    } else if (isFull) {
+      actionEl.innerHTML = `<button class="book-btn" disabled>Мест нет</button>`;
+    } else {
+      actionEl.innerHTML = `<button class="book-btn">Записаться</button>`;
+      actionEl.querySelector(".book-btn").addEventListener("click", () => book(id, slot));
+    }
+
     slotsList.appendChild(div);
   });
+}
+
+// ============================================================
+// ЗАПИСЬ / ОТМЕНА УЧЕНИКОМ
+// ============================================================
+async function book(slotId, slot) {
+  if (!profileComplete(currentUser)) {
+    showToast("Сначала заполните контакты в профиле", "warn");
+    openProfileModal();
+    return;
+  }
+  try {
+    // Перепроверяем актуальное состояние слота перед записью
+    const snap = await get(ref(db, `schedule/${fmtKey(selectedDate)}/${slotId}`));
+    const freshSlot = snap.val();
+    if (!freshSlot) { showToast("Тренировка больше не существует", "warn"); return; }
+    const parts = normalizeParticipants(freshSlot.participants);
+    const limit = freshSlot.type === "personal" ? 1 : (freshSlot.limit || 6);
+    if (parts.some(p => p.nick === currentNick)) { showToast("Вы уже записаны на эту тренировку"); return; }
+    if (parts.length >= limit) { showToast("⚠️ Мест больше нет", "warn"); return; }
+
+    const pid = genId();
+    await set(ref(db, `schedule/${fmtKey(selectedDate)}/${slotId}/participants/${pid}`), {
+      name: currentUser.name,
+      nick: currentNick,
+      phone: currentUser.phone,
+      messenger: currentUser.messenger,
+      messengerType: currentUser.messengerType,
+      source: "student",
+      createdAt: Date.now()
+    });
+    await set(ref(db, `schedule/${fmtKey(selectedDate)}/${slotId}/updatedAt`), Date.now());
+    // Уведомляем тренера о новой самозаписи
+    try {
+      await push(ref(db, "trainerNotifications"), {
+        type: "new_booking",
+        nick: currentNick,
+        name: currentUser.name,
+        phone: currentUser.phone,
+        date: fmtKey(selectedDate),
+        time: freshSlot.time,
+        slotType: freshSlot.type,
+        createdAt: Date.now(),
+        read: false
+      });
+    } catch(e) { console.error("Не удалось уведомить тренера:", e); }
+    showToast("Вы записаны на тренировку");
+  } catch(e) {
+    showToast("Ошибка записи. Проверьте соединение.", "warn");
+    console.error("Ошибка записи на тренировку:", e);
+  }
+}
+
+async function unbook(slotId, pid, slot) {
+  if (!confirm("Отменить вашу запись на эту тренировку?")) return;
+  try {
+    await remove(ref(db, `schedule/${fmtKey(selectedDate)}/${slotId}/participants/${pid}`));
+    await set(ref(db, `schedule/${fmtKey(selectedDate)}/${slotId}/updatedAt`), Date.now());
+    try {
+      await push(ref(db, "trainerNotifications"), {
+        type: "cancelled_by_student",
+        nick: currentNick,
+        name: currentUser?.name || currentNick,
+        date: fmtKey(selectedDate),
+        time: slot.time,
+        slotType: slot.type,
+        createdAt: Date.now(),
+        read: false
+      });
+    } catch(e) { console.error("Не удалось уведомить тренера:", e); }
+    showToast("Запись отменена");
+  } catch(e) {
+    showToast("Ошибка отмены. Проверьте соединение.", "warn");
+    console.error("Ошибка отмены записи:", e);
+  }
 }
 
 // ============================================================
