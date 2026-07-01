@@ -6,8 +6,8 @@
 <title>ПУЛЬС — расписание</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#f2b705">
-<link rel="icon" href="icons/icon-192.png" type="image/png">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -394,7 +394,7 @@
 import {
   db, ref, onValue, push, set, remove, update,
   auth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  onAuthStateChanged, signOut, nickToEmail, notifyTrainerTelegram, SITE_BASE_URL
+  onAuthStateChanged, signOut, nickToEmail, notifyTrainerTelegram, SITE_BASE_URL, escapeHtml
 } from "./firebase-config.js";
 import { get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -987,19 +987,20 @@ async function book(slotId, slot) {
     // Личное сообщение тренеру в Telegram со всей информацией по заявке
     try {
       const contactLines = [];
-      if (currentUser.telegram) contactLines.push(`Telegram: ${currentUser.telegram}`);
-      if (currentUser.max) contactLines.push(`MAX: ${currentUser.max}`);
-      if (currentUser.whatsapp) contactLines.push(`WhatsApp: ${currentUser.whatsapp}`);
+      if (currentUser.telegram) contactLines.push(`💬 Telegram: ${escapeHtml(currentUser.telegram)}`);
+      if (currentUser.max) contactLines.push(`💬 MAX: ${escapeHtml(currentUser.max)}`);
+      if (currentUser.whatsapp) contactLines.push(`💬 WhatsApp: ${escapeHtml(currentUser.whatsapp)}`);
       const link = `${SITE_BASE_URL}trainer.html?date=${fmtKey(selectedDate)}`;
-      const text = [
-        "Новая заявка на тренировку",
-        `Имя: ${currentUser.name}`,
-        `Телефон: ${currentUser.phone}`,
+      const caption = [
+        "🔔 <b>Новая заявка на тренировку</b>",
+        "",
+        `👤 Имя: <b>${escapeHtml(currentUser.name)}</b>`,
+        `📞 Телефон: <b>${escapeHtml(currentUser.phone)}</b>`,
         ...contactLines,
-        `Дата: ${fmtKey(selectedDate)}, время: ${freshSlot.time}`,
-        link
+        `📅 Дата: <b>${escapeHtml(fmtKey(selectedDate))}</b>`,
+        `🕒 Время: <b>${escapeHtml(freshSlot.time)}</b>`
       ].join("\n");
-      const tgResult = await notifyTrainerTelegram(text);
+      const tgResult = await notifyTrainerTelegram({ caption, buttonText: "Открыть в панели →", buttonUrl: link });
       if (!tgResult.ok) {
         console.error("Не удалось отправить Telegram-уведомление тренеру:", tgResult.error);
       }
