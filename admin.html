@@ -6,8 +6,8 @@
 <title>ПУЛЬС — админ</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#f2b705">
-<link rel="icon" href="icons/icon-192.png" type="image/png">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -284,14 +284,17 @@
 
     const lines = [];
 
-    const channelResult = await postTelegramChannelMessage("✅ Тестовое сообщение из панели администратора ПУЛЬС.");
+    const testCaption = "✅ <b>Тестовое сообщение</b>\n\nИз панели администратора ПУЛЬС.";
+    const testLink = "https://auvixda.github.io/sport/";
+
+    const channelResult = await postTelegramChannelMessage({ caption: testCaption, buttonText: "Открыть сайт →", buttonUrl: testLink });
     if (channelResult.ok) {
       lines.push(`<div style="color:var(--green)">✓ Канал: сообщение отправлено успешно</div>`);
     } else {
       lines.push(`<div style="color:var(--danger)">✗ Канал: ${channelResult.error}</div>`);
     }
 
-    const trainerResult = await notifyTrainerTelegram("✅ Тестовое сообщение из панели администратора ПУЛЬС.");
+    const trainerResult = await notifyTrainerTelegram({ caption: testCaption, buttonText: "Открыть сайт →", buttonUrl: testLink });
     if (trainerResult.ok) {
       lines.push(`<div style="color:var(--green)">✓ Тренер: сообщение отправлено успешно</div>`);
     } else {
