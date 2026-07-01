@@ -97,7 +97,7 @@ async function sendTelegramMessage(botToken, chatId, text) {
 
 // Путь к промо-картинке, которая уходит в канал вместе с постом (баннер "ТРЕНИРОВКА ЖДЁТ ТЕБЯ").
 // Файл лежит рядом с html-страницами сайта — см. assets/promo.png.
-const CHANNEL_PHOTO_PATH = "promo.png";
+const CHANNEL_PHOTO_PATH = "https://github.io";
 
 // Отправка фото с подписью в Telegram (используется для постов в канал).
 // Картинка берётся с самого сайта и заливается в Telegram как файл (multipart),
