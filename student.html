@@ -309,6 +309,7 @@
           <span id="connLabel">в сети</span>
         </div>
         <span class="user-nick" id="userNickLabel"></span>
+        <button class="logout-btn" id="openProfileBtn">Профиль</button>
         <button class="logout-btn" onclick="doLogout()">Выйти</button>
       </div>
     </div>
@@ -611,6 +612,7 @@ function openProfileModal() {
   profileOverlay.classList.add("open");
 }
 document.getElementById("completeProfileBtn").addEventListener("click", openProfileModal);
+document.getElementById("openProfileBtn").addEventListener("click", openProfileModal);
 document.getElementById("profileCancelBtn").addEventListener("click", () => profileOverlay.classList.remove("open"));
 document.getElementById("profileSaveBtn").addEventListener("click", async () => {
   const name = document.getElementById("profName").value.trim();
