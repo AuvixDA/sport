@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПУЛЬС — админ</title>
+<style>
+  :root {
+    --bg: #1c1a17;
+    --card: #242220;
+    --row: #2b2823;
+    --accent: #f2b705;
+    --text: #f2f0ea;
+    --muted: #9a948c;
+    --danger: #e0554f;
+    --green: #4caf50;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text);
+  }
+
+  /* --- Экран входа --- */
+  #loginScreen {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .login-card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 32px;
+    width: 320px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  }
+  .login-card h1 {
+    color: var(--accent);
+    text-align: center;
+    margin: 0 0 24px;
+    letter-spacing: 2px;
+    font-size: 22px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  input {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    border: 1px solid #3a3631;
+    background: #1c1a17;
+    color: var(--text);
+    font-size: 15px;
+    font-family: inherit;
+  }
+  input:focus { outline: 1px solid var(--accent); }
+  button {
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button:active { opacity: 0.85; }
+  .btn-primary {
+    width: 100%; padding: 12px;
+    background: var(--accent); color: #1c1a17; font-size: 15px;
+  }
+  .error {
+    color: var(--danger);
+    font-size: 13px;
+    text-align: center;
+    margin-top: 12px;
+    min-height: 18px;
+  }
+
+  /* --- Панель --- */
+  #panel { display: none; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 16px; }
+  .card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+  .top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .logo { color: var(--accent); font-weight: 700; letter-spacing: 2px; font-size: 20px; margin: 0; }
+  .logout {
+    background: none; border: 1px solid #3a3631; color: var(--muted);
+    border-radius: 8px; padding: 6px 10px; font-size: 12px; cursor: pointer;
+  }
+  h2 { font-size: 16px; margin: 0 0 16px; }
+  .hint {
+    font-size: 12px; color: var(--muted); margin-top: -10px; margin-bottom: 16px; line-height: 1.4;
+  }
+  .save-row { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+  .save-status { font-size: 13px; color: var(--green); opacity: 0; transition: opacity 0.3s; }
+  .save-status.show { opacity: 1; }
+  .save-status.err { color: var(--danger); }
+</style>
+</head>
+<body>
+
+  <!-- Экран входа -->
+  <div id="loginScreen">
+    <div class="login-card">
+      <h1>ПУЛЬС · Admin</h1>
+      <form id="loginForm">
+        <label for="login">Email</label>
+        <input type="email" id="login" autocomplete="username" placeholder="admin@pulse.net" required>
+        <label for="password">Пароль</label>
+        <input type="password" id="password" autocomplete="current-password" required>
+        <button type="submit" class="btn-primary">Войти</button>
+        <div class="error" id="errorMsg"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Панель админа -->
+  <div id="panel">
+    <div class="wrap">
+      <div class="top">
+        <p class="logo">ПУЛЬС · Admin</p>
+        <button class="logout" id="logoutBtn">Выйти</button>
+      </div>
+
+      <div class="card">
+        <h2>Настройки Telegram</h2>
+        <form id="settingsForm">
+          <label for="botToken">Bot Token</label>
+          <input type="text" id="botToken" placeholder="123456789:AAH..." autocomplete="off">
+          <div class="hint">Токен бота, который прислал @BotFather после команды /newbot.</div>
+
+          <label for="channelUsername">Username канала</label>
+          <input type="text" id="channelUsername" placeholder="pulsetreners" autocomplete="off">
+          <div class="hint">Без «@» и без «t.me/» — только сам username, например <b>pulsetreners</b> (получится ссылка t.me/pulsetreners).</div>
+
+          <label for="trainerChatId">Telegram ID тренера</label>
+          <input type="text" id="trainerChatId" placeholder="123456789" autocomplete="off" inputmode="numeric">
+          <div class="hint">
+            Именно числовой Telegram ID тренера (не username!). Чтобы узнать: тренер пишет
+            любое сообщение боту <b>@userinfobot</b>, тот в ответ присылает «Id: 123456789» —
+            это значение и нужно сюда вписать.
+          </div>
+
+          <div class="save-row">
+            <button type="submit" class="btn-primary" style="width:auto; padding:12px 20px;">Сохранить</button>
+            <span class="save-status" id="saveStatus"></span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  import {
+    db, ref, set, onValue,
+    auth, signInWithEmailAndPassword, onAuthStateChanged, signOut,
+    ADMIN_UID
+  } from "./firebase-config.js";
+
+  const loginScreen = document.getElementById("loginScreen");
+  const panel = document.getElementById("panel");
+  const loginForm = document.getElementById("loginForm");
+  const errorMsg = document.getElementById("errorMsg");
+
+  // --- Проверка текущей сессии при загрузке страницы ---
+  onAuthStateChanged(auth, user => {
+    if (user && user.uid === ADMIN_UID) {
+      showPanel();
+    } else {
+      loginScreen.style.display = "flex";
+      panel.style.display = "none";
+    }
+  });
+
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorMsg.textContent = "";
+    const login = document.getElementById("login").value.trim();
+    const password = document.getElementById("password").value;
+    const submitBtn = loginForm.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+
+    try {
+      const cred = await signInWithEmailAndPassword(auth, login, password);
+      if (cred.user.uid !== ADMIN_UID) {
+        // Вошли в валидный Auth-аккаунт, но это не админ — выходим обратно
+        await signOut(auth);
+        errorMsg.textContent = "Этот вход доступен только владельцу сайта";
+      }
+      // если UID совпал — onAuthStateChanged сам покажет панель
+    } catch (err) {
+      if (err.code === "auth/invalid-credential" || err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
+        errorMsg.textContent = "Неверный логин или пароль";
+      } else {
+        errorMsg.textContent = "Ошибка входа. Проверьте интернет.";
+        console.error(err);
+      }
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await signOut(auth);
+  });
+
+  function showPanel() {
+    loginScreen.style.display = "none";
+    panel.style.display = "block";
+    loadSettings();
+  }
+
+  // --- Настройки Telegram ---
+  const botTokenInput = document.getElementById("botToken");
+  const channelUsernameInput = document.getElementById("channelUsername");
+  const trainerChatIdInput = document.getElementById("trainerChatId");
+  const settingsForm = document.getElementById("settingsForm");
+  const saveStatus = document.getElementById("saveStatus");
+
+  function loadSettings() {
+    onValue(ref(db, "settings/telegram"), snapshot => {
+      const data = snapshot.val() || {};
+      botTokenInput.value = data.botToken || "";
+      channelUsernameInput.value = data.channelUsername || "";
+      trainerChatIdInput.value = data.trainerChatId || "";
+    }, { onlyOnce: true });
+  }
+
+  settingsForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const submitBtn = settingsForm.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+    saveStatus.className = "save-status";
+    try {
+      await set(ref(db, "settings/telegram"), {
+        botToken: botTokenInput.value.trim(),
+        channelUsername: channelUsernameInput.value.trim().replace(/^@/, "").replace(/^t\.me\//, ""),
+        trainerChatId: trainerChatIdInput.value.trim(),
+        updatedAt: Date.now()
+      });
+      saveStatus.textContent = "Сохранено ✓";
+      saveStatus.classList.add("show");
+    } catch (err) {
+      saveStatus.textContent = "Ошибка сохранения";
+      saveStatus.classList.add("show", "err");
+      console.error(err);
+    } finally {
+      submitBtn.disabled = false;
+      setTimeout(() => saveStatus.classList.remove("show"), 2500);
+    }
+  });
+</script>
+</body>
+</html>
