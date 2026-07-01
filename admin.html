@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ПУЛЬС — админ</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f2b705">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ПУЛЬС">
 <style>
   :root {
     --bg: #1c1a17;
@@ -145,7 +153,10 @@
           <div class="hint">
             Именно числовой Telegram ID тренера (не username!). Чтобы узнать: тренер пишет
             любое сообщение боту <b>@userinfobot</b>, тот в ответ присылает «Id: 123456789» —
-            это значение и нужно сюда вписать.
+            это значение и нужно сюда вписать.<br><br>
+            <b>Важно:</b> после этого тренер должен ещё написать что‑нибудь (например «привет»)
+            <u>своему собственному боту</u> (тому, чей токен указан выше) — иначе Telegram не
+            разрешит боту написать тренеру первым, и уведомления не будут доходить.
           </div>
 
           <div class="save-row">
@@ -153,6 +164,13 @@
             <span class="save-status" id="saveStatus"></span>
           </div>
         </form>
+
+        <div style="margin-top:20px; padding-top:20px; border-top:1px solid #3a3631;">
+          <div class="save-row">
+            <button type="button" id="testTelegramBtn" class="btn-primary" style="width:auto; padding:12px 20px; background:#3a3631; color:var(--text);">Проверить связь с Telegram</button>
+          </div>
+          <div id="testResult" style="font-size:13px; margin-top:12px; line-height:1.6;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -161,7 +179,7 @@
   import {
     db, ref, set, onValue,
     auth, signInWithEmailAndPassword, onAuthStateChanged, signOut,
-    ADMIN_UID
+    ADMIN_UID, postTelegramChannelMessage, notifyTrainerTelegram
   } from "./firebase-config.js";
 
   const loginScreen = document.getElementById("loginScreen");
@@ -256,6 +274,40 @@
       setTimeout(() => saveStatus.classList.remove("show"), 2500);
     }
   });
+
+  // --- Проверка связи с Telegram ---
+  document.getElementById("testTelegramBtn").addEventListener("click", async () => {
+    const testBtn = document.getElementById("testTelegramBtn");
+    const resultEl = document.getElementById("testResult");
+    testBtn.disabled = true;
+    resultEl.innerHTML = "Проверяю…";
+
+    const lines = [];
+
+    const channelResult = await postTelegramChannelMessage("✅ Тестовое сообщение из панели администратора ПУЛЬС.");
+    if (channelResult.ok) {
+      lines.push(`<div style="color:var(--green)">✓ Канал: сообщение отправлено успешно</div>`);
+    } else {
+      lines.push(`<div style="color:var(--danger)">✗ Канал: ${channelResult.error}</div>`);
+    }
+
+    const trainerResult = await notifyTrainerTelegram("✅ Тестовое сообщение из панели администратора ПУЛЬС.");
+    if (trainerResult.ok) {
+      lines.push(`<div style="color:var(--green)">✓ Тренер: сообщение отправлено успешно</div>`);
+    } else {
+      lines.push(`<div style="color:var(--danger)">✗ Тренер: ${trainerResult.error}</div>`);
+    }
+
+    resultEl.innerHTML = lines.join("");
+    testBtn.disabled = false;
+  });
+</script>
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
 </script>
 </body>
 </html>
