@@ -6,8 +6,8 @@
 <title>ПУЛЬС — админ</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#f2b705">
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -114,21 +114,6 @@
 </head>
 <body>
 
-  <!-- Экран входа -->
-  <div id="loginScreen">
-    <div class="login-card">
-      <h1>ПУЛЬС · Admin</h1>
-      <form id="loginForm">
-        <label for="login">Email</label>
-        <input type="email" id="login" autocomplete="username" placeholder="admin@pulse.net" required>
-        <label for="password">Пароль</label>
-        <input type="password" id="password" autocomplete="current-password" required>
-        <button type="submit" class="btn-primary">Войти</button>
-        <div class="error" id="errorMsg"></div>
-      </form>
-    </div>
-  </div>
-
   <!-- Панель админа -->
   <div id="panel">
     <div class="wrap">
@@ -178,59 +163,44 @@
 <script type="module">
   import {
     db, ref, set, onValue,
-    auth, signInWithEmailAndPassword, onAuthStateChanged, signOut,
-    ADMIN_UID, postTelegramChannelMessage, notifyTrainerTelegram
+    auth, onAuthStateChanged, signOut,
+    TRAINER_UID, ADMIN_UID, postTelegramChannelMessage, notifyTrainerTelegram
   } from "./firebase-config.js";
 
-  const loginScreen = document.getElementById("loginScreen");
   const panel = document.getElementById("panel");
-  const loginForm = document.getElementById("loginForm");
-  const errorMsg = document.getElementById("errorMsg");
 
-  // --- Проверка текущей сессии при загрузке страницы ---
-  onAuthStateChanged(auth, user => {
-    if (user && user.uid === ADMIN_UID) {
+  // --- Доступ: пускаем в панель только после подтверждения, что вошёл админ ---
+  document.body.style.visibility = "hidden";
+  await new Promise(resolve => {
+    const unsub = onAuthStateChanged(auth, user => {
+      unsub();
+      if (!user) {
+        // Не залогинены — на общий вход
+        window.location.href = "index.html";
+        return;
+      }
+      if (user.uid === TRAINER_UID) {
+        // Вошли как тренер — это его отдельная зона
+        window.location.href = "trainer.html";
+        return;
+      }
+      if (user.uid !== ADMIN_UID) {
+        // Валидный аккаунт, но не админ — это ученик, ему сюда нельзя
+        window.location.href = "student.html";
+        return;
+      }
+      document.body.style.visibility = "visible";
       showPanel();
-    } else {
-      loginScreen.style.display = "flex";
-      panel.style.display = "none";
-    }
-  });
-
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    errorMsg.textContent = "";
-    const login = document.getElementById("login").value.trim();
-    const password = document.getElementById("password").value;
-    const submitBtn = loginForm.querySelector("button[type=submit]");
-    submitBtn.disabled = true;
-
-    try {
-      const cred = await signInWithEmailAndPassword(auth, login, password);
-      if (cred.user.uid !== ADMIN_UID) {
-        // Вошли в валидный Auth-аккаунт, но это не админ — выходим обратно
-        await signOut(auth);
-        errorMsg.textContent = "Этот вход доступен только владельцу сайта";
-      }
-      // если UID совпал — onAuthStateChanged сам покажет панель
-    } catch (err) {
-      if (err.code === "auth/invalid-credential" || err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
-        errorMsg.textContent = "Неверный логин или пароль";
-      } else {
-        errorMsg.textContent = "Ошибка входа. Проверьте интернет.";
-        console.error(err);
-      }
-    } finally {
-      submitBtn.disabled = false;
-    }
+      resolve();
+    });
   });
 
   document.getElementById("logoutBtn").addEventListener("click", async () => {
     await signOut(auth);
+    window.location.href = "index.html";
   });
 
   function showPanel() {
-    loginScreen.style.display = "none";
     panel.style.display = "block";
     loadSettings();
   }
@@ -284,17 +254,14 @@
 
     const lines = [];
 
-    const testCaption = "✅ <b>Тестовое сообщение</b>\n\nИз панели администратора ПУЛЬС.";
-    const testLink = "https://auvixda.github.io/sport/";
-
-    const channelResult = await postTelegramChannelMessage({ caption: testCaption, buttonText: "Открыть сайт →", buttonUrl: testLink });
+    const channelResult = await postTelegramChannelMessage("✅ Тестовое сообщение из панели администратора ПУЛЬС.");
     if (channelResult.ok) {
       lines.push(`<div style="color:var(--green)">✓ Канал: сообщение отправлено успешно</div>`);
     } else {
       lines.push(`<div style="color:var(--danger)">✗ Канал: ${channelResult.error}</div>`);
     }
 
-    const trainerResult = await notifyTrainerTelegram({ caption: testCaption, buttonText: "Открыть сайт →", buttonUrl: testLink });
+    const trainerResult = await notifyTrainerTelegram("✅ Тестовое сообщение из панели администратора ПУЛЬС.");
     if (trainerResult.ok) {
       lines.push(`<div style="color:var(--green)">✓ Тренер: сообщение отправлено успешно</div>`);
     } else {

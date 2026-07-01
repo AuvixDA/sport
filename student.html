@@ -6,8 +6,8 @@
 <title>ПУЛЬС — расписание</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#f2b705">
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -268,43 +268,6 @@
 </head>
 <body>
 
-<!-- ===== AUTH ===== -->
-<div id="authScreen">
-  <div class="auth-card">
-    <h1>ПУЛЬС</h1>
-    <div class="auth-subtitle">расписание тренировок</div>
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Войти</button>
-      <button class="auth-tab" id="tabReg" onclick="switchTab('reg')">Регистрация</button>
-    </div>
-
-    <label class="auth-label">Ник (латинские буквы)</label>
-    <input class="auth-input" type="text" id="authNick" placeholder="например: maxim23" autocomplete="username">
-    <div class="auth-hint">только a–z, 0–9, без пробелов</div>
-
-    <label class="auth-label">Пароль</label>
-    <input class="auth-input" type="password" id="authPass" autocomplete="current-password">
-
-    <!-- Поля только для регистрации -->
-    <div class="reg-only" id="regOnlyBlock">
-      <label class="auth-label">Имя и фамилия</label>
-      <input class="auth-input" type="text" id="authName" placeholder="Иван Иванов">
-
-      <label class="auth-label">Контактный телефон</label>
-      <input class="auth-input" type="tel" id="authPhone" placeholder="+7 900 000-00-00">
-
-      <label class="auth-label">Контакты для связи</label>
-      <input class="auth-input" type="text" id="authTelegram" placeholder="Telegram: @username">
-      <input class="auth-input" type="text" id="authMax" placeholder="MAX: @username">
-      <input class="auth-input" type="text" id="authWhatsapp" placeholder="WhatsApp: +7 900 000-00-00">
-      <div class="auth-hint">заполните хотя бы одно поле — нужно, чтобы тренер мог связаться по поводу записи</div>
-    </div>
-
-    <button class="auth-btn" id="authBtn" onclick="doAuth()">Войти</button>
-    <div class="auth-error" id="authError"></div>
-  </div>
-</div>
-
 <!-- ===== APP ===== -->
 <input type="date" id="datePicker">
 <div id="appScreen">
@@ -393,8 +356,8 @@
 <script type="module">
 import {
   db, ref, onValue, push, set, remove, update,
-  auth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  onAuthStateChanged, signOut, nickToEmail, notifyTrainerTelegram, SITE_BASE_URL, escapeHtml
+  auth, onAuthStateChanged, signOut,
+  TRAINER_UID, ADMIN_UID, notifyTrainerTelegram, SITE_BASE_URL
 } from "./firebase-config.js";
 import { get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -472,151 +435,40 @@ function showToast(msg, type = "") {
 }
 
 // ============================================================
-// AUTH
+// ДОСТУП: вход/регистрация теперь только на index.html.
+// Здесь только проверяем сессию и решаем, кого пускать.
 // ============================================================
-window.switchTab = function(tab) {
-  document.getElementById("tabLogin").className = "auth-tab" + (tab==="login" ? " active" : "");
-  document.getElementById("tabReg").className   = "auth-tab" + (tab==="reg"   ? " active" : "");
-  document.getElementById("authBtn").textContent = tab === "login" ? "Войти" : "Зарегистрироваться";
-  document.getElementById("authError").textContent = "";
-  document.getElementById("authBtn").dataset.tab = tab;
-  document.getElementById("regOnlyBlock").classList.toggle("show", tab === "reg");
-};
-document.getElementById("authBtn").dataset.tab = "login";
-
-window.doAuth = async function() {
-  const nick = document.getElementById("authNick").value.trim().toLowerCase();
-  const pass = document.getElementById("authPass").value;
-  const tab  = document.getElementById("authBtn").dataset.tab;
-  const errEl = document.getElementById("authError");
-  errEl.textContent = "";
-
-  if (!/^[a-z0-9]{2,20}$/.test(nick)) {
-    errEl.textContent = "Ник: только a–z и 0–9, от 2 до 20 символов"; return;
-  }
-  if (pass.length < 4) {
-    errEl.textContent = "Пароль: минимум 4 символа"; return;
-  }
-
-  let regData = null;
-  if (tab === "reg") {
-    const name = document.getElementById("authName").value.trim();
-    const phone = document.getElementById("authPhone").value.trim();
-    const telegram = document.getElementById("authTelegram").value.trim();
-    const max = document.getElementById("authMax").value.trim();
-    const whatsapp = document.getElementById("authWhatsapp").value.trim();
-    if (!name) { errEl.textContent = "Укажите имя и фамилию"; return; }
-    if (phone.replace(/\D/g,"").length < 7) { errEl.textContent = "Укажите корректный телефон"; return; }
-    if (!telegram && !max && !whatsapp) { errEl.textContent = "Укажите хотя бы один мессенджер для связи"; return; }
-    regData = { name, phone };
-    if (telegram) regData.telegram = telegram;
-    if (max) regData.max = max;
-    if (whatsapp) regData.whatsapp = whatsapp;
-  }
-
-  document.getElementById("authBtn").textContent = "...";
-  const email = nickToEmail(nick);
-
-  try {
-    if (tab === "login") {
-      try {
-        const cred = await signInWithEmailAndPassword(auth, email, pass);
-        saveAndEnter(nick);
-        return;
-      } catch (authErr) {
-        if (authErr.code === "auth/user-not-found" || authErr.code === "auth/invalid-credential") {
-          // Возможно, это старый аккаунт (создан до перехода на Firebase Auth) — пробуем мигрировать
-          const migrated = await tryMigrateLegacyAccount(nick, pass, email);
-          if (migrated) { saveAndEnter(nick); return; }
-          errEl.textContent = "Пользователь не найден";
-        } else if (authErr.code === "auth/wrong-password") {
-          errEl.textContent = "Неверный пароль";
-        } else {
-          errEl.textContent = "Ошибка соединения. Проверьте интернет.";
-          console.error(authErr);
-        }
-      }
-    } else {
-      try {
-        const cred = await createUserWithEmailAndPassword(auth, email, pass);
-        await set(ref(db, `users/${nick}`), {
-          authUid: cred.user.uid,
-          createdAt: Date.now(),
-          ...regData
-        });
-        saveAndEnter(nick);
-        return;
-      } catch (authErr) {
-        if (authErr.code === "auth/email-already-in-use") {
-          errEl.textContent = "Этот ник уже занят";
-        } else if (authErr.code === "auth/weak-password") {
-          errEl.textContent = "Пароль слишком простой, попробуйте длиннее";
-        } else {
-          errEl.textContent = "Ошибка соединения. Проверьте интернет.";
-          console.error(authErr);
-        }
-      }
-    }
-  } catch(e) {
-    errEl.textContent = "Ошибка соединения. Проверьте интернет.";
-    console.error(e);
-  }
-
-  document.getElementById("authBtn").textContent = tab === "login" ? "Войти" : "Зарегистрироваться";
-};
-
-// Аккаунты, созданные до перехода на Firebase Auth, хранили пароль прямо в базе.
-// При первом входе после обновления — тихо создаём для них настоящий Auth-аккаунт
-// и убираем пароль из базы, чтобы им не пришлось регистрироваться заново.
-async function tryMigrateLegacyAccount(nick, pass, email) {
-  try {
-    const snap = await get(ref(db, `users/${nick}`));
-    if (!snap.exists()) return null;
-    const data = snap.val();
-    if (data.authUid) return null; // уже мигрирован, но пароль почему-то не подошёл
-    if (data.password !== pass) return null; // старый пароль тоже не совпал
-
-    const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    await update(ref(db, `users/${nick}`), { authUid: cred.user.uid });
-    await remove(ref(db, `users/${nick}/password`));
-    return cred.user;
-  } catch (e) {
-    console.error("Ошибка миграции старого аккаунта:", e);
-    return null;
-  }
-}
-
-// Enter по паролю
-document.getElementById("authPass").addEventListener("keydown", e => {
-  if (e.key === "Enter") window.doAuth();
-});
-
-function saveAndEnter(nick) {
-  currentNick = nick;
-  showApp();
-}
-
 window.doLogout = async function() {
   await signOut(auth);
-  currentNick = null;
-  document.getElementById("appScreen").style.display = "none";
-  document.getElementById("authScreen").style.display = "flex";
+  window.location.href = "index.html";
 };
 
-// Авто-вход: ждём, что скажет Firebase Auth о текущей сессии
-function tryAutoLogin() {
-  return new Promise(resolve => {
-    const unsub = onAuthStateChanged(auth, user => {
-      unsub();
-      if (user && user.email && user.email.endsWith("@pulse.local")) {
-        currentNick = user.email.split("@")[0];
-        resolve(true);
-      } else {
-        resolve(false);
-      }
-    });
+// --- Доступ: пускаем в приложение только после подтверждения сессии ---
+document.body.style.visibility = "hidden";
+await new Promise(resolve => {
+  const unsub = onAuthStateChanged(auth, user => {
+    unsub();
+    if (!user) {
+      // Не залогинены — на общий вход
+      window.location.href = "index.html";
+      return;
+    }
+    if (user.uid === TRAINER_UID) {
+      // Вошли как тренер — это его отдельная зона
+      window.location.href = "trainer.html";
+      return;
+    }
+    if (user.uid === ADMIN_UID) {
+      // Вошли как админ — это его отдельная зона
+      window.location.href = "admin.html";
+      return;
+    }
+    // Обычный аккаунт ученика: ник — это локальная часть его синтетической почты
+    currentNick = (user.email || "").split("@")[0];
+    document.body.style.visibility = "visible";
+    resolve();
   });
-}
+});
 
 // ============================================================
 // ПРОФИЛЬ (контакты)
@@ -677,7 +529,6 @@ document.getElementById("profileSaveBtn").addEventListener("click", async () => 
 // APP
 // ============================================================
 function showApp() {
-  document.getElementById("authScreen").style.display = "none";
   document.getElementById("appScreen").style.display  = "block";
   document.getElementById("userNickLabel").textContent = currentNick;
   applyUrlDateParam();
@@ -987,20 +838,19 @@ async function book(slotId, slot) {
     // Личное сообщение тренеру в Telegram со всей информацией по заявке
     try {
       const contactLines = [];
-      if (currentUser.telegram) contactLines.push(`💬 Telegram: ${escapeHtml(currentUser.telegram)}`);
-      if (currentUser.max) contactLines.push(`💬 MAX: ${escapeHtml(currentUser.max)}`);
-      if (currentUser.whatsapp) contactLines.push(`💬 WhatsApp: ${escapeHtml(currentUser.whatsapp)}`);
+      if (currentUser.telegram) contactLines.push(`Telegram: ${currentUser.telegram}`);
+      if (currentUser.max) contactLines.push(`MAX: ${currentUser.max}`);
+      if (currentUser.whatsapp) contactLines.push(`WhatsApp: ${currentUser.whatsapp}`);
       const link = `${SITE_BASE_URL}trainer.html?date=${fmtKey(selectedDate)}`;
-      const caption = [
-        "🔔 <b>Новая заявка на тренировку</b>",
-        "",
-        `👤 Имя: <b>${escapeHtml(currentUser.name)}</b>`,
-        `📞 Телефон: <b>${escapeHtml(currentUser.phone)}</b>`,
+      const text = [
+        "Новая заявка на тренировку",
+        `Имя: ${currentUser.name}`,
+        `Телефон: ${currentUser.phone}`,
         ...contactLines,
-        `📅 Дата: <b>${escapeHtml(fmtKey(selectedDate))}</b>`,
-        `🕒 Время: <b>${escapeHtml(freshSlot.time)}</b>`
+        `Дата: ${fmtKey(selectedDate)}, время: ${freshSlot.time}`,
+        link
       ].join("\n");
-      const tgResult = await notifyTrainerTelegram({ caption, buttonText: "Открыть в панели →", buttonUrl: link });
+      const tgResult = await notifyTrainerTelegram(text);
       if (!tgResult.ok) {
         console.error("Не удалось отправить Telegram-уведомление тренеру:", tgResult.error);
       }
@@ -1039,14 +889,7 @@ async function unbook(slotId, pid, slot) {
 // ============================================================
 // СТАРТ
 // ============================================================
-(async () => {
-  const ok = await tryAutoLogin();
-  if (ok) {
-    showApp();
-  } else {
-    document.getElementById("authScreen").style.display = "flex";
-  }
-})();
+showApp();
 </script>
 <script>
   if ("serviceWorker" in navigator) {

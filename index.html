@@ -6,8 +6,8 @@
 <title>ПУЛЬС — вход</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#f2b705">
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,9 +16,12 @@
   :root {
     --bg: #1c1a17;
     --card: #242220;
+    --row: #2b2823;
     --accent: #f2b705;
     --text: #f2f0ea;
     --muted: #9a948c;
+    --danger: #e0554f;
+    --green: #4caf50;
   }
   * { box-sizing: border-box; }
   body {
@@ -30,21 +33,28 @@
     background: var(--bg);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     color: var(--text);
+    padding: 24px 16px;
   }
   .card {
     background: var(--card);
     border-radius: 16px;
     padding: 32px;
-    width: 320px;
+    width: 340px;
+    max-width: 100%;
     box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-    transition: opacity 0.15s ease;
   }
   h1 {
     color: var(--accent);
     text-align: center;
-    margin: 0 0 24px;
+    margin: 0 0 6px;
     letter-spacing: 2px;
     font-size: 22px;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 28px;
   }
   label {
     display: block;
@@ -61,103 +71,403 @@
     background: #1c1a17;
     color: var(--text);
     font-size: 15px;
+    font-family: inherit;
   }
   input:focus { outline: 1px solid var(--accent); }
-  button {
+  button { font-family: inherit; cursor: pointer; }
+  button:active { opacity: 0.85; }
+
+  /* --- Экран выбора роли --- */
+  .role-btn {
     width: 100%;
-    padding: 12px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .role-btn.primary {
+    padding: 16px;
     background: var(--accent);
     color: #1c1a17;
-    font-weight: 600;
-    font-size: 15px;
-    cursor: pointer;
+    font-size: 16px;
   }
-  button:active { opacity: 0.85; }
-  .error {
-    color: #e0554f;
-    font-size: 13px;
-    text-align: center;
-    margin-top: 12px;
-    min-height: 18px;
+  .role-btn.secondary {
+    padding: 13px;
+    background: var(--row);
+    color: var(--text);
+    font-size: 14px;
   }
-  .link {
+  .role-link {
     display: block;
+    width: 100%;
     text-align: center;
-    margin-top: 20px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 8px;
+    margin-top: 4px;
+    text-decoration: underline;
+  }
+
+  /* --- Формы входа --- */
+  .back-btn {
+    background: none;
+    border: none;
     color: var(--muted);
     font-size: 13px;
-    text-decoration: none;
+    padding: 0 0 18px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
+  .form-title {
+    color: var(--accent);
+    text-align: center;
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .form-subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 20px;
+  }
+  .auth-tabs {
+    display: flex; gap: 0; margin-bottom: 20px;
+    border-radius: 8px; overflow: hidden;
+    border: 1px solid #3a3631;
+  }
+  .auth-tab {
+    flex: 1; padding: 9px; text-align: center;
+    background: none; border: none; color: var(--muted);
+    font-size: 14px;
+  }
+  .auth-tab.active { background: var(--accent); color: #1c1a17; font-weight: 600; }
+  .hint { font-size: 11px; color: var(--muted); margin-bottom: 12px; margin-top: -10px; line-height: 1.4; }
+  .reg-only { display: none; }
+  .reg-only.show { display: block; }
+  .submit-btn {
+    width: 100%; padding: 12px; border: none; border-radius: 8px;
+    background: var(--accent); color: #1c1a17;
+    font-weight: 600; font-size: 15px; margin-top: 4px;
+  }
+  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .form-error {
+    color: var(--danger); font-size: 13px;
+    text-align: center; margin-top: 12px; min-height: 18px;
+  }
+
+  /* --- Экран проверки сессии --- */
+  #checkScreen {
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    color: var(--muted); font-size: 13px;
+  }
+  .spin {
+    width: 26px; height: 26px; border: 3px solid #3a3631;
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .screen { display: none; }
+  .screen.show { display: block; }
 </style>
 </head>
 <body>
-  <div class="card">
+
+  <!-- Проверка текущей сессии -->
+  <div id="checkScreen" class="card">
+    <div class="spin"></div>
+    <div>Проверяем сессию…</div>
+  </div>
+
+  <!-- Выбор роли -->
+  <div id="roleScreen" class="card screen">
     <h1>ПУЛЬС</h1>
-    <form id="loginForm">
-      <label for="login">Email</label>
-      <input type="email" id="login" autocomplete="username" placeholder="trainer@pulse.net" required>
-      <label for="password">Пароль</label>
-      <input type="password" id="password" autocomplete="current-password" required>
-      <button type="submit">Войти</button>
-      <div class="error" id="errorMsg"></div>
+    <div class="subtitle">запись на тренировки</div>
+    <button class="role-btn primary" id="studentRoleBtn">Войти как ученик</button>
+    <button class="role-btn secondary" id="trainerRoleBtn">Войти как тренер</button>
+    <button class="role-link" id="adminRoleBtn">Войти как админ</button>
+  </div>
+
+  <!-- Ученик: вход / регистрация -->
+  <div id="studentScreen" class="card screen">
+    <button class="back-btn" id="studentBackBtn">← Назад</button>
+    <h1>ПУЛЬС</h1>
+    <div class="subtitle">расписание тренировок</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" type="button">Войти</button>
+      <button class="auth-tab" id="tabReg" type="button">Регистрация</button>
+    </div>
+
+    <form id="studentForm">
+      <label for="stNick">Ник (латинские буквы)</label>
+      <input type="text" id="stNick" placeholder="например: maxim23" autocomplete="username">
+      <div class="hint">только a–z, 0–9, без пробелов</div>
+
+      <label for="stPass">Пароль</label>
+      <input type="password" id="stPass" autocomplete="current-password">
+
+      <!-- Поля только для регистрации -->
+      <div class="reg-only" id="regOnlyBlock">
+        <label for="stName">Имя и фамилия</label>
+        <input type="text" id="stName" placeholder="Иван Иванов">
+
+        <label for="stPhone">Контактный телефон</label>
+        <input type="tel" id="stPhone" placeholder="+7 900 000-00-00">
+
+        <label>Контакты для связи</label>
+        <input type="text" id="stTelegram" placeholder="Telegram: @username">
+        <input type="text" id="stMax" placeholder="MAX: @username">
+        <input type="text" id="stWhatsapp" placeholder="WhatsApp: +7 900 000-00-00">
+        <div class="hint">заполните хотя бы одно поле — нужно, чтобы тренер мог связаться по поводу записи</div>
+      </div>
+
+      <button type="submit" class="submit-btn" id="studentSubmitBtn">Войти</button>
+      <div class="form-error" id="studentError"></div>
     </form>
-    <a class="link" href="student.html">Открыть расписание (для учеников) →</a>
+  </div>
+
+  <!-- Тренер / Админ: вход по email -->
+  <div id="staffScreen" class="card screen">
+    <button class="back-btn" id="staffBackBtn">← Назад</button>
+    <h1 class="form-title" id="staffTitle">Вход для тренера</h1>
+    <div class="form-subtitle" id="staffSubtitle">Используйте выданные вам email и пароль</div>
+    <form id="staffForm">
+      <label for="staffLogin">Email</label>
+      <input type="email" id="staffLogin" autocomplete="username" placeholder="trainer@pulse.net" required>
+      <label for="staffPassword">Пароль</label>
+      <input type="password" id="staffPassword" autocomplete="current-password" required>
+      <button type="submit" class="submit-btn">Войти</button>
+      <div class="form-error" id="staffError"></div>
+    </form>
   </div>
 
 <script type="module">
-  import { auth, signInWithEmailAndPassword, signOut, onAuthStateChanged, TRAINER_UID } from "./firebase-config.js";
+import {
+  db, ref, set, get, remove, update,
+  auth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+  onAuthStateChanged, nickToEmail,
+  TRAINER_UID, ADMIN_UID
+} from "./firebase-config.js";
 
-  const form = document.getElementById("loginForm");
-  const errorMsg = document.getElementById("errorMsg");
-  const submitBtn = form.querySelector("button[type=submit]");
-  const card = document.querySelector(".card");
+// ============================================================
+// ЭКРАНЫ
+// ============================================================
+const checkScreen   = document.getElementById("checkScreen");
+const roleScreen    = document.getElementById("roleScreen");
+const studentScreen = document.getElementById("studentScreen");
+const staffScreen   = document.getElementById("staffScreen");
 
-  // Пока идёт проверка сохранённой сессии — прячем форму, чтобы не мелькала
-  card.style.visibility = "hidden";
-
-  let handledInitial = false;
-  onAuthStateChanged(auth, (user) => {
-    if (user && user.uid === TRAINER_UID) {
-      // Уже залогинены как тренер — сразу пускаем внутрь, без формы
-      window.location.href = "trainer.html";
-      return;
-    }
-    // Либо не залогинены, либо это не тренер — показываем форму логина
-    if (!handledInitial) {
-      handledInitial = true;
-      card.style.visibility = "visible";
-    }
-  });
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    errorMsg.textContent = "";
-    const login = document.getElementById("login").value.trim();
-    const password = document.getElementById("password").value;
-    submitBtn.disabled = true;
-
-    try {
-      const cred = await signInWithEmailAndPassword(auth, login, password);
-      if (cred.user.uid !== TRAINER_UID) {
-        // Вошли в валидный Auth-аккаунт, но это не тренер — выходим обратно
-        await signOut(auth);
-        errorMsg.textContent = "Этот вход доступен только тренеру";
-      } else {
-        window.location.href = "trainer.html";
-      }
-    } catch (err) {
-      if (err.code === "auth/invalid-credential" || err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
-        errorMsg.textContent = "Неверный логин или пароль";
-      } else {
-        errorMsg.textContent = "Ошибка входа. Проверьте интернет.";
-        console.error(err);
-      }
-    } finally {
-      submitBtn.disabled = false;
+function showScreen(el) {
+  [checkScreen, roleScreen, studentScreen, staffScreen].forEach(s => {
+    if (s === checkScreen) {
+      s.style.display = (s === el) ? "flex" : "none";
+    } else {
+      s.classList.toggle("show", s === el);
     }
   });
+}
+
+// ============================================================
+// РЕДИРЕКТ ПО РОЛИ: определяем реальный uid и отправляем в нужную зону
+// ============================================================
+function redirectByUid(uid) {
+  if (uid === TRAINER_UID) {
+    window.location.href = "trainer.html";
+  } else if (uid === ADMIN_UID) {
+    window.location.href = "admin.html";
+  } else {
+    window.location.href = "student.html";
+  }
+}
+
+// ============================================================
+// ПРОВЕРКА АКТИВНОЙ СЕССИИ: если уже залогинены — молча редиректим,
+// формы вообще не показываем.
+// ============================================================
+showScreen(checkScreen);
+let handledInitial = false;
+onAuthStateChanged(auth, (user) => {
+  if (handledInitial) return;
+  handledInitial = true;
+  if (user) {
+    redirectByUid(user.uid);
+  } else {
+    showScreen(roleScreen);
+  }
+});
+
+// ============================================================
+// НАВИГАЦИЯ МЕЖДУ ЭКРАНАМИ
+// ============================================================
+document.getElementById("studentRoleBtn").addEventListener("click", () => showScreen(studentScreen));
+document.getElementById("studentBackBtn").addEventListener("click", () => showScreen(roleScreen));
+
+document.getElementById("trainerRoleBtn").addEventListener("click", () => {
+  document.getElementById("staffTitle").textContent = "Вход для тренера";
+  document.getElementById("staffLogin").placeholder = "trainer@pulse.net";
+  showScreen(staffScreen);
+});
+document.getElementById("adminRoleBtn").addEventListener("click", () => {
+  document.getElementById("staffTitle").textContent = "Вход для администратора";
+  document.getElementById("staffLogin").placeholder = "admin@pulse.net";
+  showScreen(staffScreen);
+});
+document.getElementById("staffBackBtn").addEventListener("click", () => showScreen(roleScreen));
+
+// ============================================================
+// УЧЕНИК: вход / регистрация
+// ============================================================
+const tabLogin = document.getElementById("tabLogin");
+const tabReg = document.getElementById("tabReg");
+const studentSubmitBtn = document.getElementById("studentSubmitBtn");
+const studentError = document.getElementById("studentError");
+let studentTab = "login";
+
+function switchStudentTab(tab) {
+  studentTab = tab;
+  tabLogin.className = "auth-tab" + (tab === "login" ? " active" : "");
+  tabReg.className   = "auth-tab" + (tab === "reg"   ? " active" : "");
+  studentSubmitBtn.textContent = tab === "login" ? "Войти" : "Зарегистрироваться";
+  studentError.textContent = "";
+  document.getElementById("regOnlyBlock").classList.toggle("show", tab === "reg");
+}
+tabLogin.addEventListener("click", () => switchStudentTab("login"));
+tabReg.addEventListener("click", () => switchStudentTab("reg"));
+
+document.getElementById("studentForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const nick = document.getElementById("stNick").value.trim().toLowerCase();
+  const pass = document.getElementById("stPass").value;
+  studentError.textContent = "";
+
+  if (!/^[a-z0-9]{2,20}$/.test(nick)) {
+    studentError.textContent = "Ник: только a–z и 0–9, от 2 до 20 символов"; return;
+  }
+  if (pass.length < 4) {
+    studentError.textContent = "Пароль: минимум 4 символа"; return;
+  }
+
+  let regData = null;
+  if (studentTab === "reg") {
+    const name = document.getElementById("stName").value.trim();
+    const phone = document.getElementById("stPhone").value.trim();
+    const telegram = document.getElementById("stTelegram").value.trim();
+    const max = document.getElementById("stMax").value.trim();
+    const whatsapp = document.getElementById("stWhatsapp").value.trim();
+    if (!name) { studentError.textContent = "Укажите имя и фамилию"; return; }
+    if (phone.replace(/\D/g,"").length < 7) { studentError.textContent = "Укажите корректный телефон"; return; }
+    if (!telegram && !max && !whatsapp) { studentError.textContent = "Укажите хотя бы один мессенджер для связи"; return; }
+    regData = { name, phone };
+    if (telegram) regData.telegram = telegram;
+    if (max) regData.max = max;
+    if (whatsapp) regData.whatsapp = whatsapp;
+  }
+
+  studentSubmitBtn.disabled = true;
+  studentSubmitBtn.textContent = "...";
+  const email = nickToEmail(nick);
+
+  try {
+    if (studentTab === "login") {
+      try {
+        const cred = await signInWithEmailAndPassword(auth, email, pass);
+        redirectByUid(cred.user.uid);
+        return;
+      } catch (authErr) {
+        if (authErr.code === "auth/user-not-found" || authErr.code === "auth/invalid-credential") {
+          // Возможно, это старый аккаунт (создан до перехода на Firebase Auth) — пробуем мигрировать
+          const migrated = await tryMigrateLegacyAccount(nick, pass, email);
+          if (migrated) { redirectByUid(migrated.uid); return; }
+          studentError.textContent = "Пользователь не найден";
+        } else if (authErr.code === "auth/wrong-password") {
+          studentError.textContent = "Неверный пароль";
+        } else {
+          studentError.textContent = "Ошибка соединения. Проверьте интернет.";
+          console.error(authErr);
+        }
+      }
+    } else {
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        await set(ref(db, `users/${nick}`), {
+          authUid: cred.user.uid,
+          createdAt: Date.now(),
+          ...regData
+        });
+        redirectByUid(cred.user.uid);
+        return;
+      } catch (authErr) {
+        if (authErr.code === "auth/email-already-in-use") {
+          studentError.textContent = "Этот ник уже занят";
+        } else if (authErr.code === "auth/weak-password") {
+          studentError.textContent = "Пароль слишком простой, попробуйте длиннее";
+        } else {
+          studentError.textContent = "Ошибка соединения. Проверьте интернет.";
+          console.error(authErr);
+        }
+      }
+    }
+  } catch (e) {
+    studentError.textContent = "Ошибка соединения. Проверьте интернет.";
+    console.error(e);
+  }
+
+  studentSubmitBtn.disabled = false;
+  studentSubmitBtn.textContent = studentTab === "login" ? "Войти" : "Зарегистрироваться";
+});
+
+// Аккаунты, созданные до перехода на Firebase Auth, хранили пароль прямо в базе.
+// При первом входе после обновления — тихо создаём для них настоящий Auth-аккаунт
+// и убираем пароль из базы, чтобы им не пришлось регистрироваться заново.
+async function tryMigrateLegacyAccount(nick, pass, email) {
+  try {
+    const snap = await get(ref(db, `users/${nick}`));
+    if (!snap.exists()) return null;
+    const data = snap.val();
+    if (data.authUid) return null; // уже мигрирован, но пароль почему-то не подошёл
+    if (data.password !== pass) return null; // старый пароль тоже не совпал
+
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await update(ref(db, `users/${nick}`), { authUid: cred.user.uid });
+    await remove(ref(db, `users/${nick}/password`));
+    return cred.user;
+  } catch (e) {
+    console.error("Ошибка миграции старого аккаунта:", e);
+    return null;
+  }
+}
+
+// ============================================================
+// ТРЕНЕР / АДМИН: вход по email
+// Форма общая для обеих ролей — после входа редиректим строго по
+// реальному uid, а не по тому, какую кнопку нажал человек.
+// ============================================================
+document.getElementById("staffForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const staffError = document.getElementById("staffError");
+  staffError.textContent = "";
+  const login = document.getElementById("staffLogin").value.trim();
+  const password = document.getElementById("staffPassword").value;
+  const submitBtn = e.target.querySelector("button[type=submit]");
+  submitBtn.disabled = true;
+
+  try {
+    const cred = await signInWithEmailAndPassword(auth, login, password);
+    redirectByUid(cred.user.uid);
+  } catch (err) {
+    if (err.code === "auth/invalid-credential" || err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
+      staffError.textContent = "Неверный логин или пароль";
+    } else {
+      staffError.textContent = "Ошибка входа. Проверьте интернет.";
+      console.error(err);
+    }
+    submitBtn.disabled = false;
+  }
+});
 </script>
 <script>
   if ("serviceWorker" in navigator) {

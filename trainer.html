@@ -6,8 +6,8 @@
 <title>ПУЛЬС — тренер</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#f2b705">
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -365,7 +365,7 @@
 </div>
 
 <script type="module">
-import { db, ref, set, push, remove, onValue, auth, onAuthStateChanged, signOut, TRAINER_UID, SITE_BASE_URL, postTelegramChannelMessage, escapeHtml } from "./firebase-config.js";
+import { db, ref, set, push, remove, onValue, auth, onAuthStateChanged, signOut, TRAINER_UID, SITE_BASE_URL, postTelegramChannelMessage } from "./firebase-config.js";
 import { get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 // --- Доступ: пускаем в приложение только после подтверждения, что вошёл тренер ---
@@ -1051,15 +1051,8 @@ async function postGroupTrainingToChannel(dateObj, slotData) {
     const name = trainerName || "тренер";
     const limit = slotData.limit || 6;
     const link = `${SITE_BASE_URL}student.html?date=${dateStr}`;
-    const caption = [
-      "🏋️ <b>Новая групповая тренировка</b>",
-      "",
-      `👤 Тренер: <b>${escapeHtml(name)}</b>`,
-      `📅 Дата: <b>${escapeHtml(fmtChannelDate(dateObj))}</b>`,
-      `🕒 Время: <b>${escapeHtml(slotData.time)}</b>`,
-      `👥 Мест: <b>${escapeHtml(limit)}</b>`
-    ].join("\n");
-    const result = await postTelegramChannelMessage({ caption, buttonText: "Записаться →", buttonUrl: link });
+    const text = `Тренер: ${name} открыл(а) запись на групповую тренировку ${fmtChannelDate(dateObj)} в ${slotData.time} на ${limit} человек\n${link}`;
+    const result = await postTelegramChannelMessage(text);
     if (!result.ok) {
       showToast(`Тренировка создана, но пост в канал не отправился: ${result.error}`, "warn");
     }
