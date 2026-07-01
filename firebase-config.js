@@ -8,7 +8,8 @@ import {
   push,
   remove,
   update,
-  onValue
+  onValue,
+  get
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 import {
   getAuth,
@@ -55,9 +56,69 @@ function nickToEmail(nick) {
   return `${nick}@${NICK_EMAIL_DOMAIN}`;
 }
 
+// Базовый адрес сайта на GitHub Pages — используется для ссылок в постах
+// в канал и в Telegram-уведомлениях (?date=ГГГГ-ММ-ДД).
+const SITE_BASE_URL = "https://auvixda.github.io/sport/";
+
+// ============================================================
+// TELEGRAM — отправка сообщений напрямую из браузера.
+// Токен бота и настройки берутся из settings/telegram в базе (не хардкодятся).
+// Осознанно временное решение без сервера — см. ТЗ.
+// ============================================================
+async function fetchTelegramSettings() {
+  try {
+    const snap = await get(ref(db, "settings/telegram"));
+    return snap.val() || null;
+  } catch (e) {
+    console.error("Ошибка загрузки настроек Telegram:", e);
+    return null;
+  }
+}
+
+// Возвращает { ok: true } либо { ok: false, error: "человекочитаемая причина" }
+async function sendTelegramMessage(botToken, chatId, text) {
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: false })
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      console.error("Telegram API вернул ошибку:", data);
+      return { ok: false, error: data.description || `Telegram API ошибка (код ${data.error_code || "?"})` };
+    }
+    return { ok: true };
+  } catch (e) {
+    console.error("Ошибка запроса к Telegram API:", e);
+    return { ok: false, error: "Не удалось связаться с Telegram (нет сети или блокировка)" };
+  }
+}
+
+// Публикация поста в канал (используется при создании групповой тренировки)
+async function postTelegramChannelMessage(text) {
+  const settings = await fetchTelegramSettings();
+  if (!settings || !settings.botToken || !settings.channelUsername) {
+    console.warn("Telegram: бот или канал ещё не настроены в settings/telegram");
+    return { ok: false, error: "Бот или канал не настроены в панели администратора" };
+  }
+  return sendTelegramMessage(settings.botToken, `@${settings.channelUsername}`, text);
+}
+
+// Личное сообщение тренеру (используется при новой заявке на тренировку)
+async function notifyTrainerTelegram(text) {
+  const settings = await fetchTelegramSettings();
+  if (!settings || !settings.botToken || !settings.trainerChatId) {
+    console.warn("Telegram: бот или ID тренера ещё не настроены в settings/telegram");
+    return { ok: false, error: "Бот или ID тренера не настроены в панели администратора" };
+  }
+  return sendTelegramMessage(settings.botToken, settings.trainerChatId, text);
+}
+
 export {
-  db, ref, set, push, remove, update, onValue,
+  db, ref, set, push, remove, update, onValue, get,
   auth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
   onAuthStateChanged, signOut,
-  TRAINER_UID, ADMIN_UID, nickToEmail
+  TRAINER_UID, ADMIN_UID, nickToEmail,
+  SITE_BASE_URL, postTelegramChannelMessage, notifyTrainerTelegram
 };
