@@ -999,7 +999,10 @@ async function book(slotId, slot) {
         `Дата: ${fmtKey(selectedDate)}, время: ${freshSlot.time}`,
         link
       ].join("\n");
-      await notifyTrainerTelegram(text);
+      const tgResult = await notifyTrainerTelegram(text);
+      if (!tgResult.ok) {
+        console.error("Не удалось отправить Telegram-уведомление тренеру:", tgResult.error);
+      }
     } catch(e) { console.error("Не удалось отправить Telegram-уведомление тренеру:", e); }
     showToast("Заявка отправлена, ожидайте рассмотрения");
   } catch(e) {
