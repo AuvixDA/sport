@@ -95,14 +95,53 @@ async function sendTelegramMessage(botToken, chatId, text) {
   }
 }
 
-// Публикация поста в канал (используется при создании групповой тренировки)
+// Путь к промо-картинке, которая уходит в канал вместе с постом (баннер "ТРЕНИРОВКА ЖДЁТ ТЕБЯ").
+// Файл лежит рядом с html-страницами сайта — см. assets/promo.png.
+const CHANNEL_PHOTO_PATH = "assets/promo.png";
+
+// Отправка фото с подписью в Telegram (используется для постов в канал).
+// Картинка берётся с самого сайта и заливается в Telegram как файл (multipart),
+// это не зависит от того, успел ли Telegram закэшировать/дотянуться до GitHub Pages по URL.
+// Возвращает { ok: true } либо { ok: false, error: "человекочитаемая причина" }
+async function sendTelegramPhoto(botToken, chatId, caption) {
+  try {
+    const imgRes = await fetch(CHANNEL_PHOTO_PATH);
+    if (!imgRes.ok) {
+      throw new Error(`Не удалось загрузить ${CHANNEL_PHOTO_PATH} (код ${imgRes.status})`);
+    }
+    const blob = await imgRes.blob();
+
+    const formData = new FormData();
+    formData.append("chat_id", chatId);
+    formData.append("caption", caption);
+    formData.append("photo", blob, "promo.png");
+
+    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+      method: "POST",
+      body: formData
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      console.error("Telegram API (sendPhoto) вернул ошибку:", data);
+      return { ok: false, error: data.description || `Telegram API ошибка (код ${data.error_code || "?"})` };
+    }
+    return { ok: true };
+  } catch (e) {
+    console.error("Ошибка отправки фото в Telegram:", e);
+    return { ok: false, error: "Не удалось отправить фото в Telegram (нет сети, блокировка или файл не найден на сайте)" };
+  }
+}
+
+// Публикация поста в канал (используется при создании групповой тренировки и в тесте связи).
+// Идёт с фото-баннером + подписью (caption у фото ограничен Telegram 1024 символами,
+// это с запасом покрывает текущие тексты постов).
 async function postTelegramChannelMessage(text) {
   const settings = await fetchTelegramSettings();
   if (!settings || !settings.botToken || !settings.channelUsername) {
     console.warn("Telegram: бот или канал ещё не настроены в settings/telegram");
     return { ok: false, error: "Бот или канал не настроены в панели администратора" };
   }
-  return sendTelegramMessage(settings.botToken, `@${settings.channelUsername}`, text);
+  return sendTelegramPhoto(settings.botToken, `@${settings.channelUsername}`, text);
 }
 
 // Личное сообщение тренеру (используется при новой заявке на тренировку)
