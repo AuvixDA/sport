@@ -173,6 +173,7 @@
     gap: 10px; font-size: 13px;
   }
   .booked-label { color: var(--green); font-weight: 600; }
+  .booked-label.pending { color: var(--accent); }
   .unbook-btn {
     background: none; border: 1px solid #3a3631; color: var(--danger);
     border-radius: 6px; padding: 6px 10px; font-size: 12px; cursor: pointer;
@@ -366,6 +367,17 @@
     <div class="modal-actions">
       <button class="btn-ghost" id="profileCancelBtn">Отмена</button>
       <button class="btn-primary" id="profileSaveBtn">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка: заявка отклонена -->
+<div class="overlay" id="rejectOverlay">
+  <div class="modal">
+    <h2>Заявка отклонена</h2>
+    <div class="sub" id="rejectReasonText"></div>
+    <div class="modal-actions">
+      <button class="btn-primary" id="rejectOkBtn" style="width:100%;">Понятно</button>
     </div>
   </div>
 </div>
@@ -683,6 +695,22 @@ function fmtPretty(dateKey, time) {
   const dt = new Date(+y, +m-1, +d);
   return `${dt.getDate()} ${MONTHS[dt.getMonth()]}${time ? ", " + time : ""}`;
 }
+const rejectOverlay = document.getElementById("rejectOverlay");
+let currentRejectId = null;
+function showRejectModal(id, n) {
+  document.getElementById("rejectReasonText").textContent =
+    `Заявка на тренировку ${fmtPretty(n.date, n.time)} отклонена тренером. Причина: ${n.reason || "не указана"}`;
+  rejectOverlay.classList.add("open");
+}
+document.getElementById("rejectOkBtn").addEventListener("click", async () => {
+  rejectOverlay.classList.remove("open");
+  const id = currentRejectId;
+  currentRejectId = null;
+  if (!id) return;
+  try { await set(ref(db, `notifications/${currentNick}/${id}/read`), true); }
+  catch(e) { console.error(e); }
+});
+
 function subscribeToNotifications() {
   const notifRef = ref(db, `notifications/${currentNick}`);
   onValue(notifRef, snapshot => {
@@ -691,8 +719,12 @@ function subscribeToNotifications() {
       .filter(([, n]) => !n.read)
       .sort((a,b) => (b[1].createdAt||0) - (a[1].createdAt||0));
 
+    // Отклонённые заявки показываем отдельным модальным окном, а не карточкой в общем списке
+    const rejectedEntries = entries.filter(([, n]) => n.type === "rejected");
+    const otherEntries = entries.filter(([, n]) => n.type !== "rejected");
+
     notifList.innerHTML = "";
-    entries.forEach(([id, n]) => {
+    otherEntries.forEach(([id, n]) => {
       const div = document.createElement("div");
       div.className = "notif-card " + (n.type === "cancelled" ? "cancelled" : "");
       const body = n.type === "cancelled"
@@ -709,6 +741,17 @@ function subscribeToNotifications() {
       });
       notifList.appendChild(div);
     });
+
+    if (rejectedEntries.length) {
+      const [id, n] = rejectedEntries[0];
+      if (id !== currentRejectId) {
+        currentRejectId = id;
+        showRejectModal(id, n);
+      }
+    } else {
+      currentRejectId = null;
+      rejectOverlay.classList.remove("open");
+    }
   });
 }
 
@@ -855,10 +898,11 @@ function renderSlots(data) {
 
     const actionEl = div.querySelector("[data-action-slot]");
     if (myEntry) {
+      const isPending = myEntry.status === "pending";
       actionEl.innerHTML = `
         <div class="booked-row">
-          <span class="booked-label">✓ Вы записаны</span>
-          <button class="unbook-btn" data-pid="${myEntry.id}">Отменить запись</button>
+          <span class="booked-label${isPending ? " pending" : ""}">${isPending ? "⏳ Заявка на рассмотрении" : "✓ Вы записаны"}</span>
+          <button class="unbook-btn" data-pid="${myEntry.id}">${isPending ? "Отменить заявку" : "Отменить запись"}</button>
         </div>`;
       actionEl.querySelector(".unbook-btn").addEventListener("click", () => unbook(id, myEntry.id, slot));
     } else if (isFull) {
@@ -897,6 +941,7 @@ async function book(slotId, slot) {
       nick: currentNick,
       phone: currentUser.phone,
       source: "student",
+      status: "pending",
       createdAt: Date.now()
     };
     if (currentUser.telegram) participantData.telegram = currentUser.telegram;
@@ -904,7 +949,7 @@ async function book(slotId, slot) {
     if (currentUser.whatsapp) participantData.whatsapp = currentUser.whatsapp;
     await set(ref(db, `schedule/${fmtKey(selectedDate)}/${slotId}/participants/${pid}`), participantData);
     await set(ref(db, `schedule/${fmtKey(selectedDate)}/${slotId}/updatedAt`), Date.now());
-    // Уведомляем тренера о новой самозаписи
+    // Уведомляем тренера о новой заявке
     try {
       await push(ref(db, "trainerNotifications"), {
         type: "new_booking",
@@ -918,7 +963,7 @@ async function book(slotId, slot) {
         read: false
       });
     } catch(e) { console.error("Не удалось уведомить тренера:", e); }
-    showToast("Вы записаны на тренировку");
+    showToast("Заявка отправлена, ожидайте рассмотрения");
   } catch(e) {
     showToast("Ошибка записи. Проверьте соединение.", "warn");
     console.error("Ошибка записи на тренировку:", e);
