@@ -102,6 +102,54 @@
     border-radius: 10px; font-size: 14px; cursor: pointer;
   }
 
+  /* Переключатель экранов */
+  .view-toggle {
+    background: none; border: 1px solid #3a3631; color: var(--text);
+    border-radius: 8px; padding: 6px 10px; font-size: 12px; cursor: pointer;
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  /* Уведомления тренеру о новых записях/отменах */
+  .notif-list { margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .notif-card {
+    background: #1a3a2a; border: 1px solid rgba(76,175,80,0.35);
+    border-radius: 10px; padding: 12px 14px; font-size: 13px; cursor: pointer;
+  }
+  .notif-card.cancel-type { background: #3a1a1a; border-color: rgba(224,85,79,0.4); }
+  .notif-title { font-weight: 700; margin-bottom: 4px; }
+  .notif-body { color: var(--text); opacity: 0.9; line-height: 1.4; }
+  .notif-dismiss {
+    margin-top: 8px; background: none; border: 1px solid #3a3631; color: var(--muted);
+    border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer;
+  }
+
+  /* Раздел «Ученики» */
+  #clientsView { display: none; }
+  .clients-search {
+    width: 100%; padding: 10px 12px; margin-bottom: 14px;
+    border-radius: 8px; border: 1px solid #3a3631;
+    background: #1c1a17; color: var(--text); font-size: 14px;
+  }
+  .client-card { background: var(--row); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+  .client-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .client-name { font-size: 15px; font-weight: 600; }
+  .client-nick { font-size: 12px; color: var(--muted); }
+  .client-contact { font-size: 13px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  .client-contact a { color: var(--text); text-decoration: none; }
+  .client-actions { margin-top: 8px; }
+  .history-btn {
+    background: none; border: 1px solid #3a3631; color: var(--text);
+    border-radius: 6px; padding: 6px 10px; font-size: 12px; cursor: pointer;
+  }
+  .client-history { display: none; margin-top: 10px; border-top: 1px solid #3a3631; padding-top: 10px; }
+  .client-history.open { display: block; }
+  .history-item {
+    display: flex; justify-content: space-between; font-size: 13px;
+    padding: 5px 0; color: var(--text);
+  }
+  .history-item.past { color: var(--muted); }
+  .history-empty { font-size: 13px; color: var(--muted); padding: 4px 0; }
+
   /* Тост-уведомление */
   .toast {
     position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
@@ -129,25 +177,46 @@
   .modal label {
     display: block; font-size: 12px; color: var(--muted); margin: 12px 0 6px;
   }
-  .modal input, .modal select {
+  .modal input, .modal select, .modal textarea {
     width: 100%; padding: 10px; border-radius: 8px;
     border: 1px solid #3a3631; background: #1c1a17;
-    color: var(--text); font-size: 14px;
+    color: var(--text); font-size: 14px; font-family: inherit;
   }
   .row2 { display: flex; gap: 10px; }
   .row2 > div { flex: 1; }
-  .name-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
-  .name-item {
-    display: flex; justify-content: space-between; align-items: center;
-    background: var(--row); padding: 8px 10px; border-radius: 8px; font-size: 14px;
-  }
-  .name-item button { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 13px; }
+  .name-list { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
   .add-name-row { display: flex; gap: 8px; margin-top: 10px; }
   .add-name-row input { flex: 1; }
   .add-name-row button {
     background: var(--accent); border: none; border-radius: 8px;
     padding: 0 14px; color: #1c1a17; font-weight: 600; cursor: pointer;
   }
+
+  /* Карточки участников */
+  .participant-card { background: var(--row); border-radius: 10px; padding: 10px 12px; }
+  .participant-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .participant-name { font-size: 14px; font-weight: 600; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+  .badge-self { background: var(--accent); color: #1c1a17; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 6px; white-space: nowrap; }
+  .badge-manual { background: #1c1a17; color: var(--muted); font-size: 10px; padding: 2px 7px; border-radius: 6px; border: 1px solid #3a3631; white-space: nowrap; }
+  .participant-contact { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .participant-actions { display: flex; gap: 8px; margin-top: 8px; }
+  .mini-btn {
+    background: none; border: 1px solid #3a3631; color: var(--text);
+    border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer;
+  }
+  .mini-btn.danger { color: var(--danger); border-color: rgba(224,85,79,0.4); }
+
+  .inline-form { display: none; margin-top: 10px; background: #1c1a17; border-radius: 8px; padding: 10px; }
+  .inline-form.open { display: block; }
+  .inline-form textarea { resize: vertical; min-height: 50px; margin-top: 6px; }
+  .inline-form .actions { display: flex; gap: 8px; margin-top: 10px; }
+  .inline-form .actions button {
+    flex: 1; padding: 9px; border-radius: 6px; border: none;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .inline-form .actions .confirm { background: var(--accent); color: #1c1a17; }
+  .inline-form .actions .close-btn { background: var(--card); color: var(--text); }
+  .empty-hint { font-size: 13px; color: var(--muted); padding: 6px 0; }
 
   /* Повтор */
   .repeat-block { margin-top: 14px; }
@@ -178,9 +247,14 @@
       <h1 class="logo">ПУЛЬС</h1>
       <div style="display:flex;align-items:center;gap:10px;">
         <div class="status"><span class="dot"></span> в сети</div>
+        <button class="view-toggle" id="clientsToggleBtn">👥 Ученики</button>
         <button class="logout" id="logoutBtn">Выйти</button>
       </div>
     </div>
+
+    <div id="scheduleView">
+    <div class="notif-list" id="trainerNotifList"></div>
+
 
     <!-- Навигация по неделям -->
     <div class="week-nav">
@@ -194,6 +268,12 @@
     <div class="date-title" id="dateTitle"></div>
     <div id="slotsList"></div>
     <button class="add-btn" id="addSlotBtn">+ Добавить тренировку</button>
+    </div>
+
+    <div id="clientsView">
+      <input type="text" class="clients-search" id="clientsSearch" placeholder="Поиск по имени, нику или телефону">
+      <div id="clientsList"></div>
+    </div>
   </div>
 </div>
 
@@ -226,7 +306,7 @@
     <label>Участники</label>
     <div class="name-list" id="nameList"></div>
     <div class="add-name-row">
-      <input type="text" id="newName" placeholder="Имя участника">
+      <input type="text" id="newName" placeholder="Имя участника (добавить вручную)">
       <button id="addNameBtn">+</button>
     </div>
 
@@ -251,14 +331,25 @@
 </div>
 
 <script type="module">
-import { db, ref, set, push, remove, onValue } from "./firebase-config.js";
+import { db, ref, set, push, remove, onValue, auth, onAuthStateChanged, signOut, TRAINER_UID } from "./firebase-config.js";
+import { get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// --- Доступ ---
-if (sessionStorage.getItem("pulse_trainer_auth") !== "1") {
-  window.location.href = "index.html";
-}
-document.getElementById("logoutBtn").addEventListener("click", () => {
-  sessionStorage.removeItem("pulse_trainer_auth");
+// --- Доступ: пускаем в приложение только после подтверждения, что вошёл тренер ---
+document.body.style.visibility = "hidden";
+await new Promise(resolve => {
+  const unsub = onAuthStateChanged(auth, user => {
+    unsub();
+    if (!user || user.uid !== TRAINER_UID) {
+      window.location.href = "index.html";
+      return; // страница уже уходит на редирект
+    }
+    document.body.style.visibility = "visible";
+    resolve();
+  });
+});
+
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+  await signOut(auth);
   window.location.href = "index.html";
 });
 
@@ -286,6 +377,30 @@ function getWeekDates(monday) {
   return Array.from({length: 7}, (_, i) => addDays(monday, i));
 }
 
+// --- Участники: поддержка старого формата (массив строк) и нового (объекты) ---
+function normalizeParticipants(raw) {
+  if (!raw) return [];
+  const entries = Array.isArray(raw)
+    ? raw.map((v, i) => [String(i), v])
+    : Object.entries(raw);
+  return entries
+    .filter(([, v]) => v !== null && v !== undefined)
+    .map(([id, v]) => {
+      if (typeof v === "string") {
+        return { id: "legacy_" + id, name: v, source: "trainer", createdAt: 0 };
+      }
+      return { id, source: "trainer", createdAt: 0, ...v };
+    });
+}
+function genId() {
+  return "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+function messengerLabel(p) {
+  if (!p.messenger) return null;
+  const type = p.messengerType === "telegram" ? "Telegram" : (p.messengerType === "max" ? "MAX" : "");
+  return `${type ? type + ": " : ""}${p.messenger}`;
+}
+
 // --- Состояние ---
 let weekMonday   = getMonday(new Date()); // текущая неделя
 let selectedDate = new Date();
@@ -306,7 +421,6 @@ function showToast(msg, type = "") {
 // --- Навигация по неделям ---
 document.getElementById("prevWeek").addEventListener("click", () => {
   weekMonday = addDays(weekMonday, -7);
-  // если выбранная дата вышла за пределы — сбрасываем на понедельник новой недели
   selectedDate = new Date(weekMonday);
   renderDays(); subscribeToDay();
 });
@@ -394,15 +508,16 @@ function renderSlots() {
   entries.forEach(([id, slot]) => {
     const div = document.createElement("div");
     div.className = "slot";
-    const parts = slot.participants ? Object.values(slot.participants) : [];
+    const parts = normalizeParticipants(slot.participants);
     const limit  = slot.type === "personal" ? 1 : (slot.limit || 6);
     const isFull = parts.length >= limit;
+    const selfCount = parts.filter(p => p.source === "student").length;
     div.innerHTML = `
       <div class="slot-time">${slot.time}</div>
       <div class="slot-info">
-        <div class="slot-type">${slot.type === "personal" ? "персонально" : "групповая"}</div>
+        <div class="slot-type">${slot.type === "personal" ? "персонально" : "групповая"}${selfCount ? ` · ${selfCount} самозапис${selfCount===1?"ь":"и"}` : ""}</div>
         <div class="participants">
-          ${parts.slice(0,4).map(n => `<div class="pill">${initials(n)}</div>`).join("")}
+          ${parts.slice(0,4).map(p => `<div class="pill">${initials(p.name)}</div>`).join("")}
           ${parts.length > 4 ? `<div class="pill">+${parts.length-4}</div>` : ""}
         </div>
       </div>
@@ -432,7 +547,7 @@ function openModal(id, slot) {
   slotTime.value  = slot ? slot.time : "";
   slotType.value  = slot ? slot.type : "group";
   slotLimit.value = slot?.limit ?? 6;
-  tempParticipants = slot?.participants ? Object.values(slot.participants) : [];
+  tempParticipants = normalizeParticipants(slot?.participants);
   deleteBtn.style.display = id ? "block" : "none";
   // Блок повтора — только при создании
   repeatBlock.style.display = id ? "none" : "block";
@@ -440,7 +555,7 @@ function openModal(id, slot) {
   repeatWeeksRow.style.display = "none";
   repeatCount.value = 4;
   toggleLimitBlock();
-  renderNameList();
+  renderParticipantList();
   overlay.classList.add("open");
 }
 function closeModal() {
@@ -456,24 +571,209 @@ repeatCheck.addEventListener("change", () => {
   repeatWeeksRow.style.display = repeatCheck.checked ? "flex" : "none";
 });
 
-function renderNameList() {
+// --- Рендер списка участников (ручные + самозаписавшиеся ученики) ---
+function renderParticipantList() {
   nameList.innerHTML = "";
-  tempParticipants.forEach((name, idx) => {
-    const div = document.createElement("div");
-    div.className = "name-item";
-    div.innerHTML = `<span>${name}</span><button>убрать</button>`;
-    div.querySelector("button").addEventListener("click", () => {
-      tempParticipants.splice(idx, 1); renderNameList();
-    });
-    nameList.appendChild(div);
+
+  if (!tempParticipants.length) {
+    nameList.innerHTML = `<div class="empty-hint">Пока никто не записан</div>`;
+    return;
+  }
+
+  const sorted = [...tempParticipants].sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
+
+  sorted.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "participant-card";
+
+    if (p.source === "student") {
+      const contact = [p.phone, messengerLabel(p)].filter(Boolean).join(" · ");
+      card.innerHTML = `
+        <div class="participant-top">
+          <div class="participant-name">${p.name} <span class="badge-self">записался сам</span></div>
+        </div>
+        ${contact ? `<div class="participant-contact">${contact}</div>` : ""}
+        <div class="participant-actions">
+          <button class="mini-btn" data-act="move">Перенести</button>
+          <button class="mini-btn danger" data-act="cancel">Отменить</button>
+        </div>
+        <div class="inline-form" data-form="cancel">
+          <label>Причина отмены (увидит ученик)</label>
+          <textarea placeholder="Например: тренер заболел"></textarea>
+          <div class="actions">
+            <button class="close-btn" data-act="close-cancel">Назад</button>
+            <button class="confirm" data-act="submit-cancel">Отменить запись</button>
+          </div>
+        </div>
+        <div class="inline-form" data-form="move">
+          <label>Новая дата</label>
+          <input type="date" class="move-date" min="${formatDateKey(new Date())}">
+          <label>Новое время</label>
+          <select class="move-slot"><option value="">Сначала выберите дату</option></select>
+          <label>Причина переноса (увидит ученик)</label>
+          <textarea class="move-reason" placeholder="Например: тренер уезжает"></textarea>
+          <div class="actions">
+            <button class="close-btn" data-act="close-move">Назад</button>
+            <button class="confirm" data-act="submit-move">Перенести</button>
+          </div>
+        </div>`;
+
+      const moveDateInput = card.querySelector(".move-date");
+      const moveSlotSelect = card.querySelector(".move-slot");
+      moveDateInput.addEventListener("change", async () => {
+        if (!moveDateInput.value) return;
+        moveSlotSelect.innerHTML = `<option value="">Загрузка...</option>`;
+        const list = await loadSlotsForDate(moveDateInput.value, moveDateInput.value === formatDateKey(selectedDate) ? editingSlotId : null);
+        if (!list.length) {
+          moveSlotSelect.innerHTML = `<option value="">Нет тренировок в этот день</option>`;
+          return;
+        }
+        moveSlotSelect.innerHTML = `<option value="">Выберите время</option>` + list.map(s => {
+          const full = s.count >= s.limit;
+          return `<option value="${s.id}" ${full?"disabled":""}>${s.time} — ${s.type === "personal" ? "персонально" : "групповая"} (${s.count}/${s.limit}${full?", заполнено":""})</option>`;
+        }).join("");
+      });
+
+      card.querySelector('[data-act="move"]').addEventListener("click", () => {
+        card.querySelector('[data-form="cancel"]').classList.remove("open");
+        card.querySelector('[data-form="move"]').classList.toggle("open");
+      });
+      card.querySelector('[data-act="cancel"]').addEventListener("click", () => {
+        card.querySelector('[data-form="move"]').classList.remove("open");
+        card.querySelector('[data-form="cancel"]').classList.toggle("open");
+      });
+      card.querySelector('[data-act="close-cancel"]').addEventListener("click", () => {
+        card.querySelector('[data-form="cancel"]').classList.remove("open");
+      });
+      card.querySelector('[data-act="close-move"]').addEventListener("click", () => {
+        card.querySelector('[data-form="move"]').classList.remove("open");
+      });
+      card.querySelector('[data-act="submit-cancel"]').addEventListener("click", () => {
+        handleCancelParticipant(card, p);
+      });
+      card.querySelector('[data-act="submit-move"]').addEventListener("click", () => {
+        handleMoveParticipant(card, p);
+      });
+    } else {
+      card.innerHTML = `
+        <div class="participant-top">
+          <div class="participant-name">${p.name} <span class="badge-manual">добавлен тренером</span></div>
+          <button class="mini-btn danger" data-act="remove">убрать</button>
+        </div>`;
+      card.querySelector('[data-act="remove"]').addEventListener("click", () => {
+        tempParticipants = tempParticipants.filter(x => x.id !== p.id);
+        renderParticipantList();
+      });
+    }
+
+    nameList.appendChild(card);
   });
+}
+
+async function loadSlotsForDate(dateStr, excludeId) {
+  try {
+    const snap = await get(ref(db, `schedule/${dateStr}`));
+    const data = snap.val() || {};
+    return Object.entries(data)
+      .filter(([id]) => id !== excludeId)
+      .map(([id, s]) => {
+        const parts = normalizeParticipants(s.participants);
+        const limit = s.type === "personal" ? 1 : (s.limit || 6);
+        return { id, time: s.time, type: s.type, count: parts.length, limit };
+      })
+      .sort((a,b) => a.time.localeCompare(b.time));
+  } catch (e) {
+    console.error("Ошибка загрузки слотов даты:", e);
+    return [];
+  }
+}
+
+// --- Отмена записи ученика (тренером), с указанием причины ---
+async function handleCancelParticipant(card, p) {
+  const reason = card.querySelector('[data-form="cancel"] textarea').value.trim();
+  if (!reason) { showToast("Укажите причину отмены", "warn"); return; }
+  try {
+    await remove(ref(db, `schedule/${formatDateKey(selectedDate)}/${editingSlotId}/participants/${p.id}`));
+    await set(ref(db, `schedule/${formatDateKey(selectedDate)}/${editingSlotId}/updatedAt`), Date.now());
+    if (p.nick) {
+      await push(ref(db, `notifications/${p.nick}`), {
+        type: "cancelled",
+        reason,
+        date: formatDateKey(selectedDate),
+        time: slotTime.value,
+        createdAt: Date.now(),
+        read: false
+      });
+    }
+    tempParticipants = tempParticipants.filter(x => x.id !== p.id);
+    renderParticipantList();
+    showToast("Запись отменена, ученик уведомлён");
+  } catch (e) {
+    showToast("Ошибка отмены. Проверьте соединение.", "warn");
+    console.error("Ошибка отмены записи:", e);
+  }
+}
+
+// --- Перенос записи ученика (тренером) на другой слот, с указанием причины ---
+async function handleMoveParticipant(card, p) {
+  const dateStr = card.querySelector(".move-date").value;
+  const targetSlotId = card.querySelector(".move-slot").value;
+  const reason = card.querySelector(".move-reason").value.trim();
+
+  if (!dateStr || !targetSlotId) { showToast("Выберите дату и время", "warn"); return; }
+  if (!reason) { showToast("Укажите причину переноса", "warn"); return; }
+
+  try {
+    const targetSnap = await get(ref(db, `schedule/${dateStr}/${targetSlotId}`));
+    const targetSlot = targetSnap.val();
+    if (!targetSlot) { showToast("Слот не найден, возможно удалён", "warn"); return; }
+    const targetParts = normalizeParticipants(targetSlot.participants);
+    const targetLimit = targetSlot.type === "personal" ? 1 : (targetSlot.limit || 6);
+    if (targetParts.length >= targetLimit) { showToast("⚠️ Выбранный слот уже заполнен", "warn"); return; }
+
+    const oldDate = formatDateKey(selectedDate);
+    const oldTime = slotTime.value;
+
+    await remove(ref(db, `schedule/${oldDate}/${editingSlotId}/participants/${p.id}`));
+    await set(ref(db, `schedule/${oldDate}/${editingSlotId}/updatedAt`), Date.now());
+
+    const newId = genId();
+    await set(ref(db, `schedule/${dateStr}/${targetSlotId}/participants/${newId}`), {
+      name: p.name,
+      nick: p.nick || null,
+      phone: p.phone || null,
+      messenger: p.messenger || null,
+      messengerType: p.messengerType || null,
+      source: "student",
+      createdAt: Date.now()
+    });
+    await set(ref(db, `schedule/${dateStr}/${targetSlotId}/updatedAt`), Date.now());
+
+    if (p.nick) {
+      await push(ref(db, `notifications/${p.nick}`), {
+        type: "moved",
+        reason,
+        oldDate, oldTime,
+        newDate: dateStr, newTime: targetSlot.time,
+        createdAt: Date.now(),
+        read: false
+      });
+    }
+
+    tempParticipants = tempParticipants.filter(x => x.id !== p.id);
+    renderParticipantList();
+    showToast("Запись перенесена, ученик уведомлён");
+  } catch (e) {
+    showToast("Ошибка переноса. Проверьте соединение.", "warn");
+    console.error("Ошибка переноса записи:", e);
+  }
 }
 
 document.getElementById("addNameBtn").addEventListener("click", () => {
   const name = newName.value.trim();
   if (!name) return;
-  tempParticipants.push(name);
-  newName.value = ""; renderNameList();
+  tempParticipants.push({ id: genId(), name, source: "trainer", createdAt: Date.now() });
+  newName.value = ""; renderParticipantList();
 });
 newName.addEventListener("keydown", e => {
   if (e.key === "Enter") { e.preventDefault(); document.getElementById("addNameBtn").click(); }
@@ -496,7 +796,12 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
   }
 
   const type = slotType.value;
-  const data = { time, type, participants: tempParticipants, updatedAt: Date.now() };
+  const participantsObj = {};
+  tempParticipants.forEach(p => {
+    const { id, ...rest } = p;
+    participantsObj[id] = rest;
+  });
+  const data = { time, type, participants: participantsObj, updatedAt: Date.now() };
   if (type === "group") data.limit = Number(slotLimit.value) || 6;
 
   try {
@@ -519,10 +824,24 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
   }
 });
 
+// --- Удаление всей тренировки: уведомляем всех записавшихся учеников ---
 deleteBtn.addEventListener("click", async () => {
   if (!editingSlotId) return;
+  const reason = prompt("Причина отмены тренировки (отправится записавшимся ученикам):", "Тренировка отменена тренером");
+  if (reason === null) return;
   if (!confirm("Удалить эту тренировку?")) return;
   try {
+    const studentParts = tempParticipants.filter(p => p.source === "student" && p.nick);
+    for (const p of studentParts) {
+      await push(ref(db, `notifications/${p.nick}`), {
+        type: "cancelled",
+        reason: reason || "Тренировка отменена тренером",
+        date: formatDateKey(selectedDate),
+        time: slotTime.value,
+        createdAt: Date.now(),
+        read: false
+      });
+    }
     await remove(ref(db, `schedule/${formatDateKey(selectedDate)}/${editingSlotId}`));
     closeModal();
     showToast("Тренировка удалена");
@@ -535,6 +854,187 @@ deleteBtn.addEventListener("click", async () => {
 // --- Старт ---
 renderDays();
 subscribeToDay();
+subscribeToTrainerNotifications();
+
+// ============================================================
+// ПЕРЕКЛЮЧЕНИЕ «РАСПИСАНИЕ» / «УЧЕНИКИ»
+// ============================================================
+const scheduleView = document.getElementById("scheduleView");
+const clientsView  = document.getElementById("clientsView");
+const clientsToggleBtn = document.getElementById("clientsToggleBtn");
+let clientsLoaded = false;
+
+clientsToggleBtn.addEventListener("click", () => {
+  const showingClients = clientsView.style.display === "block";
+  if (showingClients) {
+    clientsView.style.display = "none";
+    scheduleView.style.display = "block";
+    clientsToggleBtn.textContent = "👥 Ученики";
+  } else {
+    clientsView.style.display = "block";
+    scheduleView.style.display = "none";
+    clientsToggleBtn.textContent = "📅 Расписание";
+    if (!clientsLoaded) { subscribeToClients(); clientsLoaded = true; }
+  }
+});
+
+// ============================================================
+// УВЕДОМЛЕНИЯ ТРЕНЕРУ (новые самозаписи и отмены учеников)
+// ============================================================
+const trainerNotifList = document.getElementById("trainerNotifList");
+function fmtNotifDate(dateKey, time) {
+  if (!dateKey) return time || "";
+  const [y,m,d] = dateKey.split("-");
+  const dt = new Date(+y, +m-1, +d);
+  return `${dt.getDate()} ${MONTHS[dt.getMonth()]}${time ? ", " + time : ""}`;
+}
+function subscribeToTrainerNotifications() {
+  const notifRef = ref(db, "trainerNotifications");
+  onValue(notifRef, snapshot => {
+    const data = snapshot.val() || {};
+    const entries = Object.entries(data)
+      .filter(([, n]) => !n.read)
+      .sort((a,b) => (b[1].createdAt||0) - (a[1].createdAt||0));
+
+    trainerNotifList.innerHTML = "";
+    entries.forEach(([id, n]) => {
+      const div = document.createElement("div");
+      const isCancel = n.type === "cancelled_by_student";
+      div.className = "notif-card" + (isCancel ? " cancel-type" : "");
+      const body = isCancel
+        ? `${n.name} отменил(а) запись на тренировку ${fmtNotifDate(n.date, n.time)}.`
+        : `${n.name} записал(ся/ась) на тренировку ${fmtNotifDate(n.date, n.time)} (${n.slotType === "personal" ? "персонально" : "группа"}).`;
+      div.innerHTML = `
+        <div class="notif-title">${isCancel ? "↩️ Отмена записи" : "✅ Новая запись"}</div>
+        <div class="notif-body">${body}</div>
+        <button class="notif-dismiss" data-id="${id}">Понятно</button>`;
+      div.addEventListener("click", e => {
+        if (e.target.closest(".notif-dismiss")) return;
+        // Переходим к дню тренировки
+        const [y,m,d] = n.date.split("-");
+        const jumped = new Date(+y, +m-1, +d);
+        weekMonday = getMonday(jumped);
+        selectedDate = jumped;
+        renderDays(); subscribeToDay();
+      });
+      div.querySelector(".notif-dismiss").addEventListener("click", async (e) => {
+        e.stopPropagation();
+        try { await set(ref(db, `trainerNotifications/${id}/read`), true); }
+        catch(err) { console.error(err); }
+      });
+      trainerNotifList.appendChild(div);
+    });
+  });
+}
+
+// ============================================================
+// БАЗА УЧЕНИКОВ
+// ============================================================
+const clientsList = document.getElementById("clientsList");
+const clientsSearch = document.getElementById("clientsSearch");
+let allClients = [];
+
+function subscribeToClients() {
+  const usersRef = ref(db, "users");
+  onValue(usersRef, snapshot => {
+    const data = snapshot.val() || {};
+    allClients = Object.entries(data)
+      .map(([nick, u]) => ({ nick, ...u }))
+      .sort((a,b) => (a.name||a.nick).localeCompare(b.name||b.nick, "ru"));
+    renderClients();
+  });
+}
+
+clientsSearch.addEventListener("input", renderClients);
+
+function messengerLabelClient(u) {
+  if (!u.messenger) return null;
+  const type = u.messengerType === "telegram" ? "Telegram" : (u.messengerType === "max" ? "MAX" : "");
+  return `${type ? type + ": " : ""}${u.messenger}`;
+}
+
+function renderClients() {
+  const q = clientsSearch.value.trim().toLowerCase();
+  const filtered = !q ? allClients : allClients.filter(u =>
+    (u.name||"").toLowerCase().includes(q) ||
+    u.nick.toLowerCase().includes(q) ||
+    (u.phone||"").toLowerCase().includes(q)
+  );
+
+  clientsList.innerHTML = "";
+  if (!filtered.length) {
+    clientsList.innerHTML = `<div class="empty-hint">${allClients.length ? "Никого не найдено" : "Пока никто не зарегистрировался"}</div>`;
+    return;
+  }
+
+  filtered.forEach(u => {
+    const card = document.createElement("div");
+    card.className = "client-card";
+    const msg = messengerLabelClient(u);
+    card.innerHTML = `
+      <div class="client-top">
+        <div>
+          <div class="client-name">${u.name || "Без имени"}</div>
+          <div class="client-nick">@${u.nick}</div>
+        </div>
+      </div>
+      <div class="client-contact">
+        ${u.phone ? `📞 <a href="tel:${u.phone.replace(/\s/g,"")}">${u.phone}</a><br>` : "📞 не указан<br>"}
+        ${msg ? `💬 ${msg}` : "💬 не указан"}
+      </div>
+      <div class="client-actions">
+        <button class="history-btn" data-nick="${u.nick}">Показать историю записей</button>
+      </div>
+      <div class="client-history" id="history-${u.nick}"></div>`;
+
+    card.querySelector(".history-btn").addEventListener("click", async (e) => {
+      const btn = e.target;
+      const histEl = card.querySelector(`#history-${u.nick}`);
+      const isOpen = histEl.classList.contains("open");
+      if (isOpen) { histEl.classList.remove("open"); btn.textContent = "Показать историю записей"; return; }
+      histEl.classList.add("open");
+      btn.textContent = "Скрыть историю";
+      histEl.innerHTML = `<div class="history-empty">Загрузка…</div>`;
+      const history = await loadClientHistory(u.nick);
+      renderClientHistory(histEl, history);
+    });
+
+    clientsList.appendChild(card);
+  });
+}
+
+async function loadClientHistory(nick) {
+  try {
+    const snap = await get(ref(db, "schedule"));
+    const data = snap.val() || {};
+    const result = [];
+    Object.entries(data).forEach(([dateKey, slots]) => {
+      Object.values(slots || {}).forEach(slot => {
+        const parts = normalizeParticipants(slot.participants);
+        if (parts.some(p => p.nick === nick)) {
+          result.push({ date: dateKey, time: slot.time, type: slot.type });
+        }
+      });
+    });
+    return result.sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+  } catch(e) {
+    console.error("Ошибка загрузки истории ученика:", e);
+    return null;
+  }
+}
+
+function renderClientHistory(el, history) {
+  if (history === null) { el.innerHTML = `<div class="history-empty">Не удалось загрузить историю</div>`; return; }
+  if (!history.length) { el.innerHTML = `<div class="history-empty">Записей пока не было</div>`; return; }
+  const todayKey = formatDateKey(new Date());
+  el.innerHTML = history.map(h => {
+    const isPast = h.date < todayKey;
+    return `<div class="history-item ${isPast?"past":""}">
+      <span>${fmtNotifDate(h.date, h.time)} · ${h.type === "personal" ? "персонально" : "групповая"}</span>
+      <span>${isPast ? "была" : "предстоит"}</span>
+    </div>`;
+  }).join("");
+}
 </script>
 </body>
 </html>
