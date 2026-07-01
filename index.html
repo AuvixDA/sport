@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ПУЛЬС — вход</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f2b705">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ПУЛЬС">
+<style>
+  :root {
+    --bg: #1c1a17;
+    --card: #242220;
+    --accent: #f2b705;
+    --text: #f2f0ea;
+    --muted: #9a948c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text);
+  }
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 32px;
+    width: 320px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    transition: opacity 0.15s ease;
+  }
+  h1 {
+    color: var(--accent);
+    text-align: center;
+    margin: 0 0 24px;
+    letter-spacing: 2px;
+    font-size: 22px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  input {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    border: 1px solid #3a3631;
+    background: #1c1a17;
+    color: var(--text);
+    font-size: 15px;
+  }
+  input:focus { outline: 1px solid var(--accent); }
+  button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #1c1a17;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  button:active { opacity: 0.85; }
+  .error {
+    color: #e0554f;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 12px;
+    min-height: 18px;
+  }
+  .link {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    color: var(--muted);
+    font-size: 13px;
+    text-decoration: none;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>ПУЛЬС</h1>
+    <form id="loginForm">
+      <label for="login">Email</label>
+      <input type="email" id="login" autocomplete="username" placeholder="trainer@pulse.net" required>
+      <label for="password">Пароль</label>
+      <input type="password" id="password" autocomplete="current-password" required>
+      <button type="submit">Войти</button>
+      <div class="error" id="errorMsg"></div>
+    </form>
+    <a class="link" href="student.html">Открыть расписание (для учеников) →</a>
+  </div>
+
+<script type="module">
+  import { auth, signInWithEmailAndPassword, signOut, onAuthStateChanged, TRAINER_UID } from "./firebase-config.js";
+
+  const form = document.getElementById("loginForm");
+  const errorMsg = document.getElementById("errorMsg");
+  const submitBtn = form.querySelector("button[type=submit]");
+  const card = document.querySelector(".card");
+
+  // Пока идёт проверка сохранённой сессии — прячем форму, чтобы не мелькала
+  card.style.visibility = "hidden";
+
+  let handledInitial = false;
+  onAuthStateChanged(auth, (user) => {
+    if (user && user.uid === TRAINER_UID) {
+      // Уже залогинены как тренер — сразу пускаем внутрь, без формы
+      window.location.href = "trainer.html";
+      return;
+    }
+    // Либо не залогинены, либо это не тренер — показываем форму логина
+    if (!handledInitial) {
+      handledInitial = true;
+      card.style.visibility = "visible";
+    }
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorMsg.textContent = "";
+    const login = document.getElementById("login").value.trim();
+    const password = document.getElementById("password").value;
+    submitBtn.disabled = true;
+
+    try {
+      const cred = await signInWithEmailAndPassword(auth, login, password);
+      if (cred.user.uid !== TRAINER_UID) {
+        // Вошли в валидный Auth-аккаунт, но это не тренер — выходим обратно
+        await signOut(auth);
+        errorMsg.textContent = "Этот вход доступен только тренеру";
+      } else {
+        window.location.href = "trainer.html";
+      }
+    } catch (err) {
+      if (err.code === "auth/invalid-credential" || err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
+        errorMsg.textContent = "Неверный логин или пароль";
+      } else {
+        errorMsg.textContent = "Ошибка входа. Проверьте интернет.";
+        console.error(err);
+      }
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+</script>
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
