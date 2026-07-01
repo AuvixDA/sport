@@ -4,7 +4,7 @@
 # ============================================================
 
 $repoPath = "C:\Users\Lenovo 2.0\Documents\1Vajnoe\sport"
-$intervalSeconds = 20
+$intervalSeconds = 60
 
 Set-Location $repoPath
 
