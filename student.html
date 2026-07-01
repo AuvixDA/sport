@@ -284,19 +284,11 @@
       <label class="auth-label">Контактный телефон</label>
       <input class="auth-input" type="tel" id="authPhone" placeholder="+7 900 000-00-00">
 
-      <label class="auth-label">Мессенджер для связи</label>
-      <div class="auth-row2">
-        <div>
-          <select class="auth-select" id="authMsgType">
-            <option value="telegram">Telegram</option>
-            <option value="max">MAX</option>
-          </select>
-        </div>
-        <div>
-          <input class="auth-input" type="text" id="authMsgHandle" placeholder="@username">
-        </div>
-      </div>
-      <div class="auth-hint">нужно, чтобы тренер мог связаться по поводу записи</div>
+      <label class="auth-label">Контакты для связи</label>
+      <input class="auth-input" type="text" id="authTelegram" placeholder="Telegram: @username">
+      <input class="auth-input" type="text" id="authMax" placeholder="MAX: @username">
+      <input class="auth-input" type="text" id="authWhatsapp" placeholder="WhatsApp: +7 900 000-00-00">
+      <div class="auth-hint">заполните хотя бы одно поле — нужно, чтобы тренер мог связаться по поводу записи</div>
     </div>
 
     <button class="auth-btn" id="authBtn" onclick="doAuth()">Войти</button>
@@ -364,18 +356,11 @@
     <label class="auth-label">Контактный телефон</label>
     <input class="auth-input" type="tel" id="profPhone" placeholder="+7 900 000-00-00">
 
-    <label class="auth-label">Мессенджер для связи</label>
-    <div class="auth-row2">
-      <div>
-        <select class="auth-select" id="profMsgType">
-          <option value="telegram">Telegram</option>
-          <option value="max">MAX</option>
-        </select>
-      </div>
-      <div>
-        <input class="auth-input" type="text" id="profMsgHandle" placeholder="@username">
-      </div>
-    </div>
+    <label class="auth-label">Контакты для связи</label>
+    <input class="auth-input" type="text" id="profTelegram" placeholder="Telegram: @username">
+    <input class="auth-input" type="text" id="profMax" placeholder="MAX: @username">
+    <input class="auth-input" type="text" id="profWhatsapp" placeholder="WhatsApp: +7 900 000-00-00">
+    <div class="auth-hint">заполните хотя бы одно поле</div>
 
     <div class="modal-actions">
       <button class="btn-ghost" id="profileCancelBtn">Отмена</button>
@@ -484,12 +469,16 @@ window.doAuth = async function() {
   if (tab === "reg") {
     const name = document.getElementById("authName").value.trim();
     const phone = document.getElementById("authPhone").value.trim();
-    const msgType = document.getElementById("authMsgType").value;
-    const msgHandle = document.getElementById("authMsgHandle").value.trim();
+    const telegram = document.getElementById("authTelegram").value.trim();
+    const max = document.getElementById("authMax").value.trim();
+    const whatsapp = document.getElementById("authWhatsapp").value.trim();
     if (!name) { errEl.textContent = "Укажите имя и фамилию"; return; }
     if (phone.replace(/\D/g,"").length < 7) { errEl.textContent = "Укажите корректный телефон"; return; }
-    if (!msgHandle) { errEl.textContent = "Укажите контакт в мессенджере"; return; }
-    regData = { name, phone, messengerType: msgType, messenger: msgHandle };
+    if (!telegram && !max && !whatsapp) { errEl.textContent = "Укажите хотя бы один мессенджер для связи"; return; }
+    regData = { name, phone };
+    if (telegram) regData.telegram = telegram;
+    if (max) regData.max = max;
+    if (whatsapp) regData.whatsapp = whatsapp;
   }
 
   document.getElementById("authBtn").textContent = "...";
@@ -600,7 +589,7 @@ function tryAutoLogin() {
 // ПРОФИЛЬ (контакты)
 // ============================================================
 function profileComplete(u) {
-  return !!(u && u.name && u.phone && u.messenger);
+  return !!(u && u.name && u.phone && (u.telegram || u.max || u.whatsapp));
 }
 async function loadProfile() {
   try {
@@ -616,8 +605,9 @@ const profileOverlay = document.getElementById("profileOverlay");
 function openProfileModal() {
   document.getElementById("profName").value = currentUser?.name || "";
   document.getElementById("profPhone").value = currentUser?.phone || "";
-  document.getElementById("profMsgType").value = currentUser?.messengerType || "telegram";
-  document.getElementById("profMsgHandle").value = currentUser?.messenger || "";
+  document.getElementById("profTelegram").value = currentUser?.telegram || "";
+  document.getElementById("profMax").value = currentUser?.max || "";
+  document.getElementById("profWhatsapp").value = currentUser?.whatsapp || "";
   profileOverlay.classList.add("open");
 }
 document.getElementById("completeProfileBtn").addEventListener("click", openProfileModal);
@@ -625,18 +615,20 @@ document.getElementById("profileCancelBtn").addEventListener("click", () => prof
 document.getElementById("profileSaveBtn").addEventListener("click", async () => {
   const name = document.getElementById("profName").value.trim();
   const phone = document.getElementById("profPhone").value.trim();
-  const messengerType = document.getElementById("profMsgType").value;
-  const messenger = document.getElementById("profMsgHandle").value.trim();
-  if (!name || phone.replace(/\D/g,"").length < 7 || !messenger) {
-    showToast("Заполните все поля контактов", "warn");
+  const telegram = document.getElementById("profTelegram").value.trim();
+  const max = document.getElementById("profMax").value.trim();
+  const whatsapp = document.getElementById("profWhatsapp").value.trim();
+  if (!name || phone.replace(/\D/g,"").length < 7 || (!telegram && !max && !whatsapp)) {
+    showToast("Заполните имя, телефон и хотя бы один мессенджер", "warn");
     return;
   }
   try {
     await set(ref(db, `users/${currentNick}/name`), name);
     await set(ref(db, `users/${currentNick}/phone`), phone);
-    await set(ref(db, `users/${currentNick}/messengerType`), messengerType);
-    await set(ref(db, `users/${currentNick}/messenger`), messenger);
-    currentUser = { ...currentUser, name, phone, messengerType, messenger };
+    await set(ref(db, `users/${currentNick}/telegram`), telegram || null);
+    await set(ref(db, `users/${currentNick}/max`), max || null);
+    await set(ref(db, `users/${currentNick}/whatsapp`), whatsapp || null);
+    currentUser = { ...currentUser, name, phone, telegram: telegram || null, max: max || null, whatsapp: whatsapp || null };
     document.getElementById("profileBanner").classList.remove("show");
     profileOverlay.classList.remove("open");
     showToast("Профиль сохранён");
@@ -898,15 +890,17 @@ async function book(slotId, slot) {
     if (parts.length >= limit) { showToast("⚠️ Мест больше нет", "warn"); return; }
 
     const pid = genId();
-    await set(ref(db, `schedule/${fmtKey(selectedDate)}/${slotId}/participants/${pid}`), {
+    const participantData = {
       name: currentUser.name,
       nick: currentNick,
       phone: currentUser.phone,
-      messenger: currentUser.messenger,
-      messengerType: currentUser.messengerType,
       source: "student",
       createdAt: Date.now()
-    });
+    };
+    if (currentUser.telegram) participantData.telegram = currentUser.telegram;
+    if (currentUser.max) participantData.max = currentUser.max;
+    if (currentUser.whatsapp) participantData.whatsapp = currentUser.whatsapp;
+    await set(ref(db, `schedule/${fmtKey(selectedDate)}/${slotId}/participants/${pid}`), participantData);
     await set(ref(db, `schedule/${fmtKey(selectedDate)}/${slotId}/updatedAt`), Date.now());
     // Уведомляем тренера о новой самозаписи
     try {
