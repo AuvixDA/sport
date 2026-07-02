@@ -165,10 +165,42 @@ async function notifyTrainerTelegram(text) {
   return sendTelegramMessage(settings.botToken, settings.trainerChatId, text);
 }
 
+// Личное сообщение ученику в Telegram (одобрение/отклонение заявки и т.п.).
+// chatId берётся из профиля ученика (users/{nick}/tgChatId) — ученик указывает
+// его сам в модалке профиля, по той же схеме, что и трeнер/админ в своих настройках.
+async function notifyStudentTelegram(chatId, text) {
+  const settings = await fetchTelegramSettings();
+  if (!settings || !settings.botToken) {
+    console.warn("Telegram: бот ещё не настроен в settings/telegram");
+    return { ok: false, error: "Бот не настроен в панели администратора" };
+  }
+  if (!chatId) {
+    return { ok: false, error: "У ученика не указан Telegram ID" };
+  }
+  return sendTelegramMessage(settings.botToken, chatId, text);
+}
+
+// Username бота (без "@"), которому ученику нужно написать /start, чтобы бот
+// вообще мог прислать ему сообщение первым. Используется только для подсказки
+// в UI — не хранится отдельно в базе, всегда берётся живьём через Telegram API.
+async function getTelegramBotUsername() {
+  const settings = await fetchTelegramSettings();
+  if (!settings || !settings.botToken) return null;
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${settings.botToken}/getMe`);
+    const data = await res.json();
+    return data.ok ? data.result.username : null;
+  } catch (e) {
+    console.error("Ошибка получения имени бота Telegram:", e);
+    return null;
+  }
+}
+
 export {
   db, ref, set, push, remove, update, onValue, get,
   auth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
   onAuthStateChanged, signOut,
   TRAINER_UID, ADMIN_UID, nickToEmail,
-  SITE_BASE_URL, postTelegramChannelMessage, notifyTrainerTelegram
+  SITE_BASE_URL, postTelegramChannelMessage, notifyTrainerTelegram,
+  notifyStudentTelegram, getTelegramBotUsername
 };
