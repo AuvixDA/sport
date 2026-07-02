@@ -1051,8 +1051,8 @@ async function postGroupTrainingToChannel(dateObj, slotData) {
     const name = trainerName || "тренер";
     const limit = slotData.limit || 6;
     const link = `${SITE_BASE_URL}student.html?date=${dateStr}`;
-    const text = `Тренер: ${name} открыл(а) запись на групповую тренировку ${fmtChannelDate(dateObj)} в ${slotData.time} на ${limit} человек\n${link}`;
-    const result = await postTelegramChannelMessage(text);
+    const text = `Тренер: ${name} открыл(а) запись на групповую тренировку ${fmtChannelDate(dateObj)} в ${slotData.time} на ${limit} человек`;
+    const result = await postTelegramChannelMessage(text, link, "Записаться");
     if (!result.ok) {
       showToast(`Тренировка создана, но пост в канал не отправился: ${result.error}`, "warn");
     }
