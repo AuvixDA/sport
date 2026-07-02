@@ -104,8 +104,10 @@ const CHANNEL_PHOTO_PATH = `${SITE_BASE_URL}promo.png`;
 // Отправка фото с подписью в Telegram (используется для постов в канал).
 // Картинка берётся с самого сайта и заливается в Telegram как файл (multipart),
 // это не зависит от того, успел ли Telegram закэшировать/дотянуться до GitHub Pages по URL.
+// buttonUrl/buttonText — необязательные параметры для inline-кнопки под постом
+// (например, кнопка "Записаться" со ссылкой на сайт вместо голой ссылки в тексте).
 // Возвращает { ok: true } либо { ok: false, error: "человекочитаемая причина" }
-async function sendTelegramPhoto(botToken, chatId, caption) {
+async function sendTelegramPhoto(botToken, chatId, caption, buttonUrl, buttonText) {
   try {
     const imgRes = await fetch(CHANNEL_PHOTO_PATH);
     if (!imgRes.ok) {
@@ -117,6 +119,11 @@ async function sendTelegramPhoto(botToken, chatId, caption) {
     formData.append("chat_id", chatId);
     formData.append("caption", caption);
     formData.append("photo", blob, "promo.png");
+    if (buttonUrl) {
+      formData.append("reply_markup", JSON.stringify({
+        inline_keyboard: [[{ text: buttonText || "Открыть сайт", url: buttonUrl }]]
+      }));
+    }
 
     const res = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
       method: "POST",
@@ -137,13 +144,15 @@ async function sendTelegramPhoto(botToken, chatId, caption) {
 // Публикация поста в канал (используется при создании групповой тренировки и в тесте связи).
 // Идёт с фото-баннером + подписью (caption у фото ограничен Telegram 1024 символами,
 // это с запасом покрывает текущие тексты постов).
-async function postTelegramChannelMessage(text) {
+// buttonUrl/buttonText — необязательно: если переданы, под постом появится
+// inline-кнопка (например "Записаться") вместо голой ссылки в тексте.
+async function postTelegramChannelMessage(text, buttonUrl, buttonText) {
   const settings = await fetchTelegramSettings();
   if (!settings || !settings.botToken || !settings.channelUsername) {
     console.warn("Telegram: бот или канал ещё не настроены в settings/telegram");
     return { ok: false, error: "Бот или канал не настроены в панели администратора" };
   }
-  return sendTelegramPhoto(settings.botToken, `@${settings.channelUsername}`, text);
+  return sendTelegramPhoto(settings.botToken, `@${settings.channelUsername}`, text, buttonUrl, buttonText);
 }
 
 // Личное сообщение тренеру (используется при новой заявке на тренировку)
